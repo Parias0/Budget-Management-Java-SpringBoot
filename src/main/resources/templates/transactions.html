@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Budżet Domowy - Transakcje</title>
+    <link rel="stylesheet" href="http://localhost:8080/css/styles.css" />
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Transakcje</h1>
+
+    <!-- Formularz dodawania transakcji -->
+    <form id="transactionForm" method="post" class="mb-4">
+        <div class="mb-3">
+            <label for="date" class="form-label">Data</label>
+            <input type="date" id="date" name="date" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="amount" class="form-label">Kwota</label>
+            <input type="number" step="0.01" id="amount" name="amount" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Opis</label>
+            <input type="text" id="description" name="description" class="form-control" required />
+        </div>
+
+        <!-- Wybór kategorii z listy -->
+        <div class="mb-3">
+            <label for="category" class="form-label">Kategoria</label>
+            <select id="category" name="categoryName" class="form-control" required>
+                <!-- Kategorie będą załadowane dynamicznie przez JS -->
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Dodaj transakcję</button>
+    </form>
+
+    <!-- Formularz dodawania nowej kategorii -->
+    <h3>Dodaj nową kategorię</h3>
+    <form id="categoryForm" method="post" class="mb-4">
+        <div class="mb-3">
+            <label for="categoryNameInput" class="form-label">Nazwa kategorii</label>
+            <input type="text" id="categoryNameInput" name="name" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-success">Dodaj kategorię</button>
+    </form>
+
+    <!-- Tabela wyświetlająca listę transakcji -->
+    <h2>Lista transakcji</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Kwota</th>
+            <th>Opis</th>
+            <th>Kategoria</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Wyświetlanie transakcji -->
+        <tr th:each="transaction : ${transactions}">
+            <td th:text="${transaction.id}"></td>
+            <td th:text="${transaction.date}"></td>
+            <td th:text="${transaction.amount}"></td>
+            <td th:text="${transaction.description}"></td>
+            <td th:text="${transaction.categoryName}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<!-- Opcjonalnie: dodaj bootstrap JS -->
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+<script>
+    // Funkcja do załadowania kategorii z serwera
+    fetch('http://localhost:8080/api/transactions/categories')
+        .then(response => response.json())
+        .then(categories => {
+            const selectElement = document.getElementById('category');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.name;
+                option.textContent = category.name;
+                selectElement.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error loading categories:', error));
+
+    // Formularz do dodawania nowej kategorii
+    document.getElementById('categoryForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const categoryName = document.getElementById('categoryNameInput').value;
+
+        fetch('http://localhost:8080/api/transactions/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: categoryName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Kategoria dodana:', data);
+            alert('Kategoria została dodana!');
+        })
+        .catch(error => console.error('Error adding category:', error));
+    });
+
+    // Formularz do dodawania transakcji
+    document.getElementById('transactionForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const transactionData = {
+            date: document.getElementById('date').value,
+            amount: document.getElementById('amount').value,
+            description: document.getElementById('description').value,
+            categoryName: document.getElementById('category').value
+        };
+
+        fetch('http://localhost:8080/api/transactions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(transactionData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Transakcja dodana:', data);
+            alert('Transakcja została dodana!');
+        })
+        .catch(error => console.error('Error adding transaction:', error));
+    });
+
+    fetch('http://localhost:8080/api/transactions')
+    .then(response => response.json())
+    .then(transactions => {
+        const tbody = document.querySelector('tbody');
+        transactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${transaction.id}</td>
+                <td>${transaction.date}</td>
+                <td>${transaction.amount}</td>
+                <td>${transaction.description}</td>
+                <td>${transaction.categoryName}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    })
+    .catch(error => console.error('Error loading transactions:', error));
+
+</script>
+</body>
+</html>
