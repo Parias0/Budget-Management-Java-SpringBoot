@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Kategorie - Budżet Domowy</title>
+    <!-- Bootstrap CSS (CDN) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<!-- Navbar Bootstrap -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="#">Budget Management</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="transactions.html">Transactions</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="categories.html">Categories</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Main content -->
+<div class="container mt-4">
+    <h1 class="text-center">Category managment</h1>
+
+
+    <!-- Formularz dodawania nowej kategorii -->
+    <h3>Add new category</h3>
+    <form id="categoryForm" class="mb-4">
+        <div class="form-group">
+            <label for="categoryNameInput">Name of category</label>
+            <input type="text" id="categoryNameInput" name="name" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-success">Add new category</button>
+    </form>
+
+
+    <!-- List of categories table -->
+    <table class="table table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="categoryTable">
+        </tbody>
+    </table>
+
+
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script src="http://localhost:8080/js/router.js"></script>
+
+<script>
+    // Function to load categories from the backend
+    function loadCategories() {
+        fetch('http://localhost:8080/api/categories')
+            .then(response => response.json())
+            .then(categories => {
+                const table = document.getElementById("categoryTable");
+                table.innerHTML = "";
+                categories.forEach(category => {
+                    const row = document.createElement("tr");
+                    row.innerHTML =
+                        <td>${category.id}</td>
+                        <td>${category.name}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${category.id})">Delete</button>
+                        </td>
+                    ;
+                    table.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Category loading error:", error));
+    }
+
+    // Adding categorie form
+    document.getElementById('categoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const categoryName = document.getElementById('categoryNameInput').value;
+        fetch('http://localhost:8080/api/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: categoryName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('New category added!');
+            loadCategories();
+        })
+        .catch(error => console.error('Error adding category:', error));
+    });
+
+    window.onload = function() {
+        loadTransactionCategories();
+        loadTransactions();
+    }
+
+    // Deleting category form
+    function deleteCategory(id) {
+        fetch(http://localhost:8080/api/categories/${id}, {
+            method: "DELETE"
+        })
+        .then(() => {
+            alert("Category was deleted!");
+            loadCategories();
+        })
+        .catch(error => console.error("Category deletion error:", error));
+    }
+
+    window.onload = loadCategories;
+
+
+
+
+</script>
+</body>
+</html>

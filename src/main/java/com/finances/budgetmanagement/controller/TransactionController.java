@@ -1,25 +1,23 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.CategoryDTO;
+import com.finances.budgetmanagement.dto.MonthlySummaryDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
-import com.finances.budgetmanagement.service.CategoryService;
 import com.finances.budgetmanagement.service.TransactionService;
+import org.apache.coyote.Response;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
-@CrossOrigin(origins = "http://localhost:63342")
 public class TransactionController {
 
     private final TransactionService transactionService;
-    private final CategoryService categoryService;
 
 
-    public TransactionController(TransactionService transactionService, CategoryService categoryService) {
+    public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
-        this.categoryService = categoryService;
     }
 
     @GetMapping
@@ -32,14 +30,28 @@ public class TransactionController {
         return transactionService.createTransaction(transactionDTO);
     }
 
-    @GetMapping("/categories")
-    public List<CategoryDTO> getAllCategories() {
-        return categoryService.getAllCategories();
+    @PutMapping("/{id}")
+    public ResponseEntity<TransactionDTO> updateTransaction(
+            @PathVariable Long id,
+            @RequestBody TransactionDTO transactionDTO){
+        return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDTO));
+    }
+
+    @DeleteMapping("/remove/{id}")
+    public ResponseEntity<String> deleteTransaction(@PathVariable Long id){
+        transactionService.deleteTransaction(id);
+        return ResponseEntity.ok("Transaction deleted");
     }
 
 
-    @PostMapping("/categories")
-    public CategoryDTO createCategory(@RequestBody CategoryDTO categoryDTO) {
-        return categoryService.createCategory(categoryDTO);
+    @GetMapping("/summary")
+    public List<MonthlySummaryDTO> getMonthlySummary(@RequestParam int year) {
+        return transactionService.getMonthlySummary(year);
     }
+
+    @GetMapping("/available-years")
+    public List<Integer> getAvailableYears(){
+        return transactionService.getAvailableYears();
+    }
+
 }

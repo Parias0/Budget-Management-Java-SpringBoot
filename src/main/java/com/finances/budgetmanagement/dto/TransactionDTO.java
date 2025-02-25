@@ -10,6 +10,7 @@ public class TransactionDTO {
     private BigDecimal amount;
     private String description;
     private String categoryName;
+    private String transactionType;
 
 
     public TransactionDTO() {
@@ -21,6 +22,14 @@ public class TransactionDTO {
         this.description = description;
         this.amount = amount;
         this.date = date;
+    }
+
+    public String getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(String transactionType) {
+        this.transactionType = transactionType;
     }
 
     public Long getId() {

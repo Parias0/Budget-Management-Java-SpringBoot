@@ -10,4 +10,7 @@ public interface CategoryService {
     CategoryDTO createCategory (CategoryDTO categoryDTO);
 
     List<CategoryDTO> getAllCategories();
-}
+
+    void deleteCategory (Long id);
+
+ }

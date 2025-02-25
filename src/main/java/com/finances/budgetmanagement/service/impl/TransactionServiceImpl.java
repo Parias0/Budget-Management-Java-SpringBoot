@@ -1,14 +1,20 @@
 package com.finances.budgetmanagement.service.impl;
 
+import com.finances.budgetmanagement.dto.MonthlySummaryDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.entity.Transaction;
+import com.finances.budgetmanagement.entity.TransactionType;
 import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.repository.TransactionRepository;
+import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,19 +22,70 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
+    private final AccountService accountService;
 
 
-    public TransactionServiceImpl(TransactionRepository transactionRepository, CategoryRepository categoryRepository) {
+    public TransactionServiceImpl(TransactionRepository transactionRepository, CategoryRepository categoryRepository, AccountService accountService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
+        this.accountService = accountService;
+    }
+
+    public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
+        Transaction transaction = mapToEntity(transactionDTO);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        Account account = accountService.getAccountById(1L);
+        accountService.updateBalanceAfterTransaction(account, savedTransaction, true);
+
+        return mapToDTO(savedTransaction);
     }
 
     @Override
-    public TransactionDTO createTransaction(TransactionDTO transactionDTO){
-        Transaction transaction = mapToEntity(transactionDTO);
-        Transaction savedTransaction = transactionRepository.save(transaction);
-        return mapToDTO(savedTransaction);
+    public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
+        Optional<Transaction> optionalTransaction = transactionRepository.findById(id);
+        if (!optionalTransaction.isPresent()) {
+            throw new RuntimeException("Transaction not found with id: " + id);
+        }
+        Transaction transaction = optionalTransaction.get();
+
+        Account account = accountService.getAccountById(1L);
+
+        // Cofnięcie starej transakcji
+        accountService.updateBalanceAfterTransaction(account, transaction, false);
+
+        // Aktualizacja danych transakcji
+        transaction.setDate(transactionDTO.getDate());
+        transaction.setAmount(transactionDTO.getAmount());
+        transaction.setDescription(transactionDTO.getDescription());
+        Category category = categoryRepository.findByName(transactionDTO.getCategoryName());
+        transaction.setCategory(category);
+        transaction.setTransactionType(TransactionType.valueOf(transactionDTO.getTransactionType()));
+
+        Transaction updatedTransaction = transactionRepository.save(transaction);
+
+        // Zastosowanie nowej transakcji
+        accountService.updateBalanceAfterTransaction(account, updatedTransaction, true);
+
+        return mapToDTO(updatedTransaction);
     }
+
+    @Override
+    public void deleteTransaction(Long id) {
+        Optional<Transaction> optionalTransaction = transactionRepository.findById(id);
+        if (!optionalTransaction.isPresent()) {
+            throw new RuntimeException("Transaction not found with id: " + id);
+        }
+        Transaction transaction = optionalTransaction.get();
+
+        Account account = accountService.getAccountById(1L);
+
+        // Cofnięcie wpływu transakcji przed jej usunięciem
+        accountService.updateBalanceAfterTransaction(account, transaction, false);
+
+        transactionRepository.deleteById(id);
+    }
+
 
     @Override
     public List<TransactionDTO>getAllTransactions(){
@@ -38,6 +95,16 @@ public class TransactionServiceImpl implements TransactionService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<MonthlySummaryDTO> getMonthlySummary(int year) {
+        return transactionRepository.getMonthlySummary(year);
+    }
+
+    @Override
+    public List<Integer> getAvailableYears() {
+        return transactionRepository.findDistinctYears();
+    }
+
     private TransactionDTO mapToDTO(Transaction transaction){
         TransactionDTO dto = new TransactionDTO();
         dto.setId(transaction.getId());
@@ -45,6 +112,7 @@ public class TransactionServiceImpl implements TransactionService {
         dto.setAmount(transaction.getAmount());
         dto.setDescription(transaction.getDescription());
         dto.setCategoryName(transaction.getCategory().getName());
+        dto.setTransactionType(transaction.getTransactionType().toString());
         return dto;
     }
 
@@ -59,6 +127,7 @@ public class TransactionServiceImpl implements TransactionService {
             throw new RuntimeException("Category not found: " + dto.getCategoryName());
         }
         transaction.setCategory(category);
+        transaction.setTransactionType(TransactionType.valueOf(dto.getTransactionType()));
         return transaction;
     }
 

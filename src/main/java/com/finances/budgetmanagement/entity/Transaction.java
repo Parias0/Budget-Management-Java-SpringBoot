@@ -22,14 +22,18 @@ public class Transaction {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType;
+
     public Transaction() {
     }
 
-    public Transaction(LocalDate date, BigDecimal amount, String description, Category category) {
+    public Transaction(LocalDate date, BigDecimal amount, String description, Category category, TransactionType transactionType) {
         this.date = date;
         this.amount = amount;
         this.description = description;
         this.category = category;
+        this.transactionType = transactionType;
     }
 
     public Category getCategory() {
@@ -70,5 +74,13 @@ public class Transaction {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
     }
 }

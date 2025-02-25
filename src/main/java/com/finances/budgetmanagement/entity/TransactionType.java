@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.entity;
 
-public enum CategoryType {
+public enum TransactionType {
     INCOME,
     EXPENSE
 }

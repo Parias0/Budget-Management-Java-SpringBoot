@@ -2,157 +2,404 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Budżet Domowy - Transakcje</title>
-    <link rel="stylesheet" href="http://localhost:8080/css/styles.css" />
+    <title>Budżet Domowy - Transactions</title>
+    <!-- Bootstrap CSS (CDN) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-<div class="container mt-4">
-    <h1>Transakcje</h1>
+<!-- Navbar Bootstrap -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="#">Budget Management</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="transactions.html">Transactions</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="categories.html">Categories</a>
+            </li>
+        </ul>
+    </div>
+</nav>
 
-    <!-- Formularz dodawania transakcji -->
-    <form id="transactionForm" method="post" class="mb-4">
-        <div class="mb-3">
-            <label for="date" class="form-label">Data</label>
+<div class="container mt-4">
+    <h1 class="text-center">Transactions</h1>
+
+    <!-- Adding transaction form -->
+    <form id="transactionForm" class="mb-4">
+        <div class="form-group">
+            <label for="date">Date</label>
             <input type="date" id="date" name="date" class="form-control" required />
         </div>
-        <div class="mb-3">
-            <label for="amount" class="form-label">Kwota</label>
+        <div class="form-group">
+            <label for="amount">Amount</label>
             <input type="number" step="0.01" id="amount" name="amount" class="form-control" required />
         </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Opis</label>
+        <div class="form-group">
+            <label for="description">Description</label>
             <input type="text" id="description" name="description" class="form-control" required />
         </div>
-
-        <!-- Wybór kategorii z listy -->
-        <div class="mb-3">
-            <label for="category" class="form-label">Kategoria</label>
+        <!-- Transaction Type -->
+        <div class="form-group">
+            <label>Type</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="transactionType" id="incomeRadio" value="INCOME" checked>
+                <label class="form-check-label" for="incomeRadio">Income</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="transactionType" id="expenseRadio" value="EXPENSE">
+                <label class="form-check-label" for="expenseRadio">Expense</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
             <select id="category" name="categoryName" class="form-control" required>
-                <!-- Kategorie będą załadowane dynamicznie przez JS -->
+                <!-- Categories loaded dynamically -->
             </select>
         </div>
-
-        <button type="submit" class="btn btn-primary">Dodaj transakcję</button>
+        <button type="submit" class="btn btn-primary">Create transaction</button>
     </form>
 
-    <!-- Formularz dodawania nowej kategorii -->
-    <h3>Dodaj nową kategorię</h3>
-    <form id="categoryForm" method="post" class="mb-4">
-        <div class="mb-3">
-            <label for="categoryNameInput" class="form-label">Nazwa kategorii</label>
-            <input type="text" id="categoryNameInput" name="name" class="form-control" required />
-        </div>
-        <button type="submit" class="btn btn-success">Dodaj kategorię</button>
-    </form>
+    <div class="container mt-4">
+        <h2 class="text-center">Current Account Balance</h2>
+        <div id="accountBalance" class="text-center"></div>
+    </div>
 
-    <!-- Tabela wyświetlająca listę transakcji -->
-    <h2>Lista transakcji</h2>
+    <!-- Transaction list -->
+    <h2 class="text-center">Transaction list</h2>
     <table class="table table-striped">
-        <thead>
+        <thead class="thead-dark">
         <tr>
             <th>ID</th>
-            <th>Data</th>
-            <th>Kwota</th>
-            <th>Opis</th>
-            <th>Kategoria</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th></th>
+            <th></th>
         </tr>
         </thead>
-        <tbody>
-        <!-- Wyświetlanie transakcji -->
-        <tr th:each="transaction : ${transactions}">
-            <td th:text="${transaction.id}"></td>
-            <td th:text="${transaction.date}"></td>
-            <td th:text="${transaction.amount}"></td>
-            <td th:text="${transaction.description}"></td>
-            <td th:text="${transaction.categoryName}"></td>
-        </tr>
+        <tbody id="transactionTable">
         </tbody>
     </table>
 
+    <div class="modal fade" id="editTransactionModal" tabindex="-1" role="dialog" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTransactionModalLabel">Edit Transaction</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTransactionForm">
+                        <input type="hidden" id="editTransactionId" name="id">
+                        <div class="form-group">
+                            <label for="editDate">Date</label>
+                            <input type="date" id="editDate" name="date" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="editAmount">Amount</label>
+                            <input type="number" step="0.01" id="editAmount" name="amount" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="editDescription">Description</label>
+                            <input type="text" id="editDescription" name="description" class="form-control" required />
+                        </div>
+                        <!-- Transaction Type -->
+                        <div class="form-group">
+                            <label>Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="editTransactionType" id="editIncomeRadio" value="INCOME">
+                                <label class="form-check-label" for="editIncomeRadio">Income</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="editTransactionType" id="editExpenseRadio" value="EXPENSE">
+                                <label class="form-check-label" for="editExpenseRadio">Expense</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCategory">Category</label>
+                            <select id="editCategory" name="categoryName" class="form-control" required>
+                                <!-- Categories loaded dynamically -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Monthly Summary</h2>
+    <!-- Year selection -->
+    <div class="form-group">
+        <label for="yearSelect">Choose year:</label>
+        <select id="yearSelect" class="form-control" onchange="loadMonthlySummary()">
+            <option value="">Select year</option>
+        </select>
+    </div>
+    <div id="monthlySummary"></div>
 </div>
 
-<!-- Opcjonalnie: dodaj bootstrap JS -->
-<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
-
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="/js/router.js"></script>
 <script>
-    // Funkcja do załadowania kategorii z serwera
-    fetch('http://localhost:8080/api/transactions/categories')
+    // Load account balance
+    function loadAccountBalance() {
+       fetch('http://localhost:8080/api/accounts/balance')
+           .then(response => response.json())
+           .then(account => {
+               document.getElementById('accountBalance').innerHTML =
+                   <h4>Balance: ${account.balance}</h4>;
+           })
+           .catch(error => console.error('Error loading account balance:', error));
+    }
+
+    // Load categories for transaction form
+    function loadTransactionCategories() {
+       fetch('http://localhost:8080/api/categories')
+           .then(response => response.json())
+           .then(categories => {
+               const selectElement = document.getElementById('category');
+               selectElement.innerHTML = "";
+               categories.forEach(category => {
+                   const option = document.createElement('option');
+                   option.value = category.name;
+                   option.textContent = category.name;
+                   selectElement.appendChild(option);
+               });
+           })
+           .catch(error => console.error('Error loading categories:', error));
+    }
+
+    // Handle transaction form submission
+    document.getElementById('transactionForm').addEventListener('submit', function(event) {
+       event.preventDefault();
+       const transactionData = {
+           date: document.getElementById('date').value,
+           amount: document.getElementById('amount').value,
+           description: document.getElementById('description').value,
+           categoryName: document.getElementById('category').value,
+           transactionType: document.querySelector('input[name="transactionType"]:checked').value
+       };
+
+       fetch('http://localhost:8080/api/transactions', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify(transactionData)
+       })
+       .then(response => response.json())
+       .then(data => {
+           alert('Transaction was added!');
+           loadTransactions();
+           loadAvailableYears();
+           loadAccountBalance();  // Odśwież saldo po dodaniu transakcji
+       })
+       .catch(error => console.error('Error adding transaction:', error));
+    });
+
+    // Load transactions
+    function loadTransactions() {
+       fetch('http://localhost:8080/api/transactions')
+           .then(response => response.json())
+           .then(transactions => {
+               const tbody = document.getElementById('transactionTable');
+               tbody.innerHTML = "";
+               transactions.forEach(transaction => {
+                   const row = document.createElement('tr');
+                   row.innerHTML =
+                       <td>${transaction.id}</td>
+                       <td>${transaction.date}</td>
+                       <td>${transaction.amount}</td>
+                       <td>${transaction.description}</td>
+                       <td>${transaction.categoryName}</td>
+                       <td>${transaction.transactionType}</td>
+                   ;
+                   tbody.appendChild(row);
+               });
+           })
+           .catch(error => console.error('Error loading transactions:', error));
+    }
+
+    // Load available years for summary selection
+    function loadAvailableYears() {
+       fetch('http://localhost:8080/api/transactions/available-years')
+           .then(response => response.json())
+           .then(years => {
+               const selectElement = document.getElementById('yearSelect');
+               selectElement.innerHTML = "<option value=''>Select year</option>";
+               years.forEach(year => {
+                   const option = document.createElement('option');
+                   option.value = year;
+                   option.textContent = year;
+                   selectElement.appendChild(option);
+               });
+           })
+           .catch(error => console.error("Error loading years:", error));
+    }
+
+    // Load monthly summary
+    const monthNames = [
+        "January", "February", "March", "April",
+        "May", "June", "July", "August",
+        "September", "October", "November", "December"
+    ];
+
+    function loadMonthlySummary() {
+       const selectedYear = document.getElementById('yearSelect').value;
+       if (!selectedYear) return;
+       fetch('http://localhost:8080/api/transactions/summary?year=' + selectedYear)
+           .then(response => response.json())
+           .then(summary => {
+               const container = document.getElementById('monthlySummary');
+               container.innerHTML = <h3>Summary for the year ${selectedYear}</h3>;
+               // Group summary items by month
+               const months = {};
+               summary.forEach(item => {
+                   const monthName = monthNames[item.month - 1];
+                   if (!months[monthName]) {
+                       months[monthName] = [];
+                   }
+                   months[monthName].push(item);
+               });
+               // Build a table for each month
+               for (const month in months) {
+                   let monthContent = <h4>${month}</h4>;
+                   monthContent += <table class="table table-bordered"><thead class="thead-dark"><tr><th>Category</th><th>Total Amount</th></tr></thead><tbody>;
+                   months[month].forEach(item => {
+                       monthContent +=
+                           <tr>
+                               <td>${item.categoryName}</td>
+                               <td>${item.totalAmount}</td>
+                           </tr>
+                       ;
+                   });
+                   monthContent += </tbody></table>;
+                   container.innerHTML += monthContent;
+               }
+           })
+           .catch(error => console.error("Error loading summary:", error));
+    }
+
+    // Funkcja do otwierania modala do edycji transakcji
+function openEditModal(transaction) {
+    // Wypełnij formularz danymi transakcji
+    document.getElementById('editTransactionId').value = transaction.id;
+    document.getElementById('editDate').value = transaction.date;
+    document.getElementById('editAmount').value = transaction.amount;
+    document.getElementById('editDescription').value = transaction.description;
+
+    // Ustaw radio button w zależności od typu transakcji
+    if (transaction.transactionType === 'INCOME') {
+        document.getElementById('editIncomeRadio').checked = true;
+    } else {
+        document.getElementById('editExpenseRadio').checked = true;
+    }
+
+    // Załaduj dostępne kategorie do selecta modala
+    fetch('http://localhost:8080/api/categories')
         .then(response => response.json())
         .then(categories => {
-            const selectElement = document.getElementById('category');
+            const selectElement = document.getElementById('editCategory');
+            selectElement.innerHTML = "";
             categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category.name;
                 option.textContent = category.name;
+                if (category.name === transaction.categoryName) {
+                    option.selected = true;
+                }
                 selectElement.appendChild(option);
             });
         })
         .catch(error => console.error('Error loading categories:', error));
 
-    // Formularz do dodawania nowej kategorii
-    document.getElementById('categoryForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-        const categoryName = document.getElementById('categoryNameInput').value;
+    // Otwórz modal (zakładamy, że używasz Bootstrapa 4)
+    $('#editTransactionModal').modal('show');
+}
 
-        fetch('http://localhost:8080/api/transactions/categories', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: categoryName })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Kategoria dodana:', data);
-            alert('Kategoria została dodana!');
-        })
-        .catch(error => console.error('Error adding category:', error));
-    });
+// Obsługa submitu dla modala do edycji transakcji
+document.getElementById('editTransactionForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const transactionId = document.getElementById('editTransactionId').value;
+    const updatedData = {
+        date: document.getElementById('editDate').value,
+        amount: document.getElementById('editAmount').value,
+        description: document.getElementById('editDescription').value,
+        categoryName: document.getElementById('editCategory').value,
+        transactionType: document.querySelector('input[name="editTransactionType"]:checked').value
+    };
 
-    // Formularz do dodawania transakcji
-    document.getElementById('transactionForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        const transactionData = {
-            date: document.getElementById('date').value,
-            amount: document.getElementById('amount').value,
-            description: document.getElementById('description').value,
-            categoryName: document.getElementById('category').value
-        };
-
-        fetch('http://localhost:8080/api/transactions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(transactionData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Transakcja dodana:', data);
-            alert('Transakcja została dodana!');
-        })
-        .catch(error => console.error('Error adding transaction:', error));
-    });
-
-    fetch('http://localhost:8080/api/transactions')
-    .then(response => response.json())
-    .then(transactions => {
-        const tbody = document.querySelector('tbody');
-        transactions.forEach(transaction => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${transaction.id}</td>
-                <td>${transaction.date}</td>
-                <td>${transaction.amount}</td>
-                <td>${transaction.description}</td>
-                <td>${transaction.categoryName}</td>
-            `;
-            tbody.appendChild(row);
-        });
+    fetch('http://localhost:8080/api/transactions/' + transactionId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
     })
-    .catch(error => console.error('Error loading transactions:', error));
+    .then(response => response.json())
+    .then(data => {
+        alert('Transaction updated successfully!');
+        $('#editTransactionModal').modal('hide');
+        loadTransactions();
+        loadAccountBalance();
+    })
+    .catch(error => console.error('Error updating transaction:', error));
+});
 
+// Dodaj do funkcji loadTransactions możliwość otwierania modala do edycji
+function loadTransactions() {
+    fetch('http://localhost:8080/api/transactions')
+        .then(response => response.json())
+        .then(transactions => {
+            const tbody = document.getElementById('transactionTable');
+            tbody.innerHTML = "";
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.innerHTML =
+                    <td>${transaction.id}</td>
+                    <td>${transaction.date}</td>
+                    <td>${transaction.amount}</td>
+                    <td>${transaction.description}</td>
+                    <td>${transaction.categoryName}</td>
+                    <td>${transaction.transactionType}</td>
+                    <td><button class="btn btn-sm btn-warning" onclick='openEditModal(${JSON.stringify(transaction)})'>Edit</button></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteTransaction(${transaction.id})">Delete</button></td>
+                ;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error loading transactions:', error));
+}
+
+function deleteTransaction(id) {
+        fetch(http://localhost:8080/api/transactions/remove/${id}, {
+            method: "DELETE"
+        })
+        .then(() => {
+            alert("Transaction was deleted!");
+            loadTransactions();
+            loadAccountBalance();
+        })
+        .catch(error => console.error("Transaction deletion error:", error));
+    }
+
+
+    // Combined onload handler
+    window.onload = function() {
+       loadTransactionCategories();
+       loadTransactions();
+       loadAvailableYears();
+       loadAccountBalance();
+    }
 </script>
 </body>
 </html>

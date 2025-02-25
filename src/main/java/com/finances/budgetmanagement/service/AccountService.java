@@ -1,0 +1,11 @@
+package com.finances.budgetmanagement.service;
+
+import com.finances.budgetmanagement.entity.Account;
+import com.finances.budgetmanagement.entity.Transaction;
+
+public interface AccountService {
+
+    Account getAccountById (Long id);
+    Account updateAccount (Account account);
+    void updateBalanceAfterTransaction(Account account, Transaction transaction, boolean isAdding);
+}
