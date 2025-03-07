@@ -1,0 +1,27 @@
+<!-- fragments/navbar.html -->
+<div th:fragment="navbar">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="#" th:text="'Budget Management'">Budget Management</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <!-- Nowy przycisk Home -->
+        <li class="nav-item" th:classappend="${activePage}=='home' ? 'active'">
+          <a class="nav-link" th:href="@{/}" th:text="'Home'">Home</a>
+        </li>
+        <li class="nav-item" th:classappend="${activePage}=='transactions' ? 'active'">
+          <a class="nav-link" th:href="@{/transactions}" th:text="'Transactions'">Transactions</a>
+        </li>
+        <li class="nav-item" th:classappend="${activePage}=='categories' ? 'active'">
+          <a class="nav-link" th:href="@{/categories}" th:text="'Categories'">Categories</a>
+        </li>
+        <li class="nav-item" th:classappend="${activePage}=='reports' ? 'active'">
+          <a class="nav-link" th:href="@{/reports}" th:text="'Reports'">Reports</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>

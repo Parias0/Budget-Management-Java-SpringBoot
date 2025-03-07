@@ -12,7 +12,6 @@ import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

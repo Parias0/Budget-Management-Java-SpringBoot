@@ -2,6 +2,8 @@ package com.finances.budgetmanagement.entity;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 public class Category {
 
@@ -11,8 +13,16 @@ public class Category {
 
     private String name;
 
-//    @Enumerated(EnumType.STRING)
-//    private CategoryType type;
+    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
+    private List<Transaction> transactions;
+
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<Transaction> transactions) {
+        this.transactions = transactions;
+    }
 
     public Category() {
     }

@@ -1,5 +1,9 @@
 package com.finances.budgetmanagement.dto;
 
+import com.finances.budgetmanagement.entity.TransactionType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
 import java.math.BigDecimal;
 import java.time.Month;
 import java.time.format.TextStyle;
@@ -10,14 +14,25 @@ public class MonthlySummaryDTO {
     private int year;
     private int month;
     private String categoryName;
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType;
     private BigDecimal totalAmount;
 
 
-    public MonthlySummaryDTO(int year,int month,String categoryName, BigDecimal totalAmount) {
+    public MonthlySummaryDTO(int year,int month,String categoryName, TransactionType transactionType, BigDecimal totalAmount) {
         this.year = year;
         this.month = month;
         this.categoryName = categoryName;
+        this.transactionType = transactionType;
         this.totalAmount = totalAmount;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
     }
 
     public int getYear() {

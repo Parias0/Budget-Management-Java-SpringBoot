@@ -39,6 +39,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        if (!category.getTransactions().isEmpty()) {
+            throw new RuntimeException("Cannot delete category with associated transactions");
+        }
         categoryRepository.deleteById(id);
     }
 

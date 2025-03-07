@@ -1,0 +1,49 @@
+<!-- home.html -->
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<section layout:fragment="content">
+  <!-- Główna zawartość -->
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <h1>Welcome to Budget Management</h1>
+        <p class="lead">Manage your finances effectively, track your transactions, and stay on top of your budget.</p>
+      </div>
+    </div>
+    <div class="row mt-5">
+      <!-- Karta salda konta -->
+      <div class="card-group">
+        <div class="card">
+          <div class="card-body text-center">
+            <h5 class="card-title">Account Balance</h5>
+            <p id="accountBalance" class="card-text display-4"></p>
+          </div>
+        </div>
+      <!-- Karta transakcji -->
+        <div class="card">
+          <div class="card-body text-center">
+            <h5 class="card-title">Transactions</h5>
+            <p class="card-text">View and manage your transactions</p>
+            <a href="/transactions" class="btn btn-warning">View Transactions</a>
+          </div>
+        </div>
+      <!-- Karta raportów -->
+        <div class="card">
+          <div class="card-body text-center">
+            <h5 class="card-title">Reports</h5>
+            <p class="card-text">Analyze your spending habits</p>
+            <a href="/reports" class="btn btn-success">View Reports</a>
+          </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <script src="/js/transactions.js"></script>
+  <script>
+
+    loadAccountBalance('accountBalance');
+  </script>
+</section>
+</html>
