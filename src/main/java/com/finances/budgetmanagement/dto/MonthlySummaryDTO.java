@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.dto;
 
-import com.finances.budgetmanagement.entity.TransactionType;
+import com.finances.budgetmanagement.enums.TransactionType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 

@@ -1,6 +1,7 @@
 package com.finances.budgetmanagement.entity;
 
 
+import com.finances.budgetmanagement.enums.TransactionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;

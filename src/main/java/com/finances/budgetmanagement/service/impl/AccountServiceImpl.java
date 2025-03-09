@@ -2,7 +2,7 @@ package com.finances.budgetmanagement.service.impl;
 
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Transaction;
-import com.finances.budgetmanagement.entity.TransactionType;
+import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.repository.AccountRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import org.springframework.stereotype.Service;

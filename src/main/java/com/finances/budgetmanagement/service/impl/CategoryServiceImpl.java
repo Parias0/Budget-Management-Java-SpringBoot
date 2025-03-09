@@ -2,6 +2,7 @@ package com.finances.budgetmanagement.service.impl;
 
 import com.finances.budgetmanagement.dto.CategoryDTO;
 import com.finances.budgetmanagement.entity.Category;
+import com.finances.budgetmanagement.exception.CategoryNotFoundException;
 import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.service.CategoryService;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,23 @@ public class CategoryServiceImpl implements CategoryService {
             throw new RuntimeException("Cannot delete category with associated transactions");
         }
         categoryRepository.deleteById(id);
+    }
+
+    @Override
+    public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
+
+        try{
+            Category category = categoryRepository.findById(id)
+                    .orElseThrow(() -> new CategoryNotFoundException("Category not fount with id: " + id));
+
+            category.setName(categoryDTO.getName());
+
+            Category updatedCategory = categoryRepository.save(category);
+
+            return mapToDTO(updatedCategory);
+        }catch (Exception e){
+            throw new RuntimeException("Error updating category: " + e.getMessage(), e);
+        }
     }
 
 

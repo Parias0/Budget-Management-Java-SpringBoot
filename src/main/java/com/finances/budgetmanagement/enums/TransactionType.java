@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.entity;
+package com.finances.budgetmanagement.enums;
 
 public enum TransactionType {
     INCOME,

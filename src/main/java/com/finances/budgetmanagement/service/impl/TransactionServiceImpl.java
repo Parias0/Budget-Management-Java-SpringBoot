@@ -5,7 +5,7 @@ import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.entity.Transaction;
-import com.finances.budgetmanagement.entity.TransactionType;
+import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.exception.CategoryNotFoundException;
 import com.finances.budgetmanagement.exception.TransactionNotFoundException;
 import com.finances.budgetmanagement.repository.CategoryRepository;
@@ -74,9 +74,6 @@ public class TransactionServiceImpl implements TransactionService {
             accountService.updateBalanceAfterTransaction(account, updatedTransaction, true);
 
             return mapToDTO(updatedTransaction);
-        } catch (TransactionNotFoundException | CategoryNotFoundException ex) {
-            // Rzucamy specyficzny wyjątek, który zostanie obsłużony wyżej (np. przez ControllerAdvice)
-            throw ex;
         } catch (Exception e) {
             throw new RuntimeException("Error updating transaction: " + e.getMessage(), e);
         }
