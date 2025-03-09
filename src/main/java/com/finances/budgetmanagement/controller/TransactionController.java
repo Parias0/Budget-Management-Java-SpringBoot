@@ -28,21 +28,24 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createTransaction(@RequestBody TransactionDTO transactionDTO) {
-        transactionService.createTransaction(transactionDTO);
+    public ResponseEntity<String> createTransaction(@RequestBody TransactionDTO transactionDTO,
+                                                    @RequestParam Long userId) {
+        transactionService.createTransaction(transactionDTO, userId);
         return new ResponseEntity<>("Transaction created successfully", HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TransactionDTO> updateTransaction(
             @PathVariable Long id,
-            @RequestBody TransactionDTO transactionDTO){
-        return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDTO));
+            @RequestBody TransactionDTO transactionDTO,
+            @RequestParam Long userId){
+        return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDTO, userId));
     }
 
     @DeleteMapping("/remove/{id}")
-    public ResponseEntity<String> deleteTransaction(@PathVariable Long id){
-        transactionService.deleteTransaction(id);
+    public ResponseEntity<String> deleteTransaction(@PathVariable Long id,
+                                                    @RequestParam Long userId){
+        transactionService.deleteTransaction(id, userId);
         return ResponseEntity.ok("Transaction deleted");
     }
 

@@ -24,40 +24,46 @@ public class TransactionServiceImpl implements TransactionService {
     private final CategoryRepository categoryRepository;
     private final AccountService accountService;
 
-
     public TransactionServiceImpl(TransactionRepository transactionRepository, CategoryRepository categoryRepository, AccountService accountService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.accountService = accountService;
     }
 
-    public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
+    public TransactionDTO createTransaction(TransactionDTO transactionDTO, Long userId) {
         try {
+            Account account = accountService.getAccountByUserId(userId);
+
+            // Mapowanie DTO do encji
             Transaction transaction = mapToEntity(transactionDTO);
+            transaction.setAccount(account); // przypisujemy konto użytkownika do transakcji
+
+            // Zapisanie transakcji
             Transaction savedTransaction = transactionRepository.save(transaction);
 
-            Account account = accountService.getAccountById(1L);
+            // Aktualizacja salda po transakcji
             accountService.updateBalanceAfterTransaction(account, savedTransaction, true);
 
             return mapToDTO(savedTransaction);
-        }catch (Exception e){
-            throw new RuntimeException("Error creating transaction: " +e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating transaction: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
-
+    public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO, Long userId) {
         try {
+            // Pobieramy transakcję
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            Account account = accountService.getAccountById(1L);
+            // Pobieramy konto użytkownika
+            Account account = accountService.getAccountByUserId(userId);
 
-            // Cofnięcie starej transakcji
+            // Cofamy poprzednią transakcję
             accountService.updateBalanceAfterTransaction(account, transaction, false);
 
-            // Aktualizacja danych transakcji
+            // Mapowanie danych do zaktualizowanej transakcji
             transaction.setDate(transactionDTO.getDate());
             transaction.setAmount(transactionDTO.getAmount());
             transaction.setDescription(transactionDTO.getDescription());
@@ -68,6 +74,7 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setCategory(category);
             transaction.setTransactionType(TransactionType.valueOf(transactionDTO.getTransactionType()));
 
+            // Zapisanie transakcji
             Transaction updatedTransaction = transactionRepository.save(transaction);
 
             // Zastosowanie nowej transakcji
@@ -80,16 +87,19 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void deleteTransaction(Long id) {
+    public void deleteTransaction(Long id, Long userId) {
         try {
+            // Pobieramy transakcję
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            Account account = accountService.getAccountById(1L);
+            // Pobieramy konto użytkownika
+            Account account = accountService.getAccountByUserId(userId);
 
-            // Cofnięcie wpływu transakcji przed jej usunięciem
+            // Cofamy wpływ transakcji przed jej usunięciem
             accountService.updateBalanceAfterTransaction(account, transaction, false);
 
+            // Usuwamy transakcję
             transactionRepository.deleteById(id);
         } catch (TransactionNotFoundException ex) {
             throw ex;
@@ -98,9 +108,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-
     @Override
-    public List<TransactionDTO>getAllTransactions(){
+    public List<TransactionDTO> getAllTransactions() {
         return transactionRepository.findAll()
                 .stream()
                 .map(this::mapToDTO)
@@ -117,7 +126,7 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findDistinctYears();
     }
 
-    private TransactionDTO mapToDTO(Transaction transaction){
+    private TransactionDTO mapToDTO(Transaction transaction) {
         TransactionDTO dto = new TransactionDTO();
         dto.setId(transaction.getId());
         dto.setDate(transaction.getDate());
@@ -128,7 +137,7 @@ public class TransactionServiceImpl implements TransactionService {
         return dto;
     }
 
-    private Transaction mapToEntity(TransactionDTO dto){
+    private Transaction mapToEntity(TransactionDTO dto) {
         Transaction transaction = new Transaction();
         transaction.setDate(dto.getDate());
         transaction.setAmount(dto.getAmount());

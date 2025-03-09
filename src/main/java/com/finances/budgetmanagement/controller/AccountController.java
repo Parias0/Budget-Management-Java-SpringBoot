@@ -5,6 +5,7 @@ import com.finances.budgetmanagement.service.AccountService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,8 +19,8 @@ public class AccountController {
     }
 
     @GetMapping("/balance")
-    public ResponseEntity<Account> getCurrentBalance(){
-        Account account = accountService.getAccountById(1L);
+    public ResponseEntity<Account> getCurrentBalance(@RequestParam Long userId){
+        Account account = accountService.getAccountByUserId(userId);
         return ResponseEntity.ok(account);
     }
 }

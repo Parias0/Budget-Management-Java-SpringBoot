@@ -1,6 +1,5 @@
 package com.finances.budgetmanagement.entity;
 
-
 import com.finances.budgetmanagement.enums.TransactionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
@@ -36,15 +35,20 @@ public class Transaction {
     @NotNull(message = "Transaction type is required")
     private TransactionType transactionType;
 
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
     public Transaction() {
     }
 
-    public Transaction(LocalDate date, BigDecimal amount, String description, Category category, TransactionType transactionType) {
+    public Transaction(LocalDate date, BigDecimal amount, String description, Category category, TransactionType transactionType, Account account) {
         this.date = date;
         this.amount = amount;
         this.description = description;
         this.category = category;
         this.transactionType = transactionType;
+        this.account = account;
     }
 
     public Category getCategory() {
@@ -93,5 +97,13 @@ public class Transaction {
 
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 }

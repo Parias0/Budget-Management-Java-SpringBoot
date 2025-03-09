@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface TransactionService {
 
-    TransactionDTO createTransaction(TransactionDTO transactionDTO);
+    TransactionDTO createTransaction(TransactionDTO transactionDTO, Long userId);
 
-    TransactionDTO updateTransaction (Long id, TransactionDTO transactionDTO);
+    TransactionDTO updateTransaction (Long id, TransactionDTO transactionDTO, Long userId);
 
-    void deleteTransaction (Long id);
+    void deleteTransaction (Long id, Long userId);
 
     List<TransactionDTO> getAllTransactions();
 

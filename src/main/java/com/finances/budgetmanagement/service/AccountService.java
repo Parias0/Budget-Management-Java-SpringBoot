@@ -5,7 +5,7 @@ import com.finances.budgetmanagement.entity.Transaction;
 
 public interface AccountService {
 
-    Account getAccountById (Long id);
+    Account getAccountByUserId (Long userId);
     Account updateAccount (Account account);
     void updateBalanceAfterTransaction(Account account, Transaction transaction, boolean isAdding);
 }

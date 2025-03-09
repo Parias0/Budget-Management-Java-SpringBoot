@@ -4,6 +4,7 @@ import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.repository.AccountRepository;
+import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import org.springframework.stereotype.Service;
 
@@ -12,18 +13,18 @@ import java.math.BigDecimal;
 @Service
 public class AccountServiceImpl implements AccountService {
 
-
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
 
-    public AccountServiceImpl(AccountRepository accountRepository) {
+    public AccountServiceImpl(AccountRepository accountRepository, UserRepository userRepository) {
         this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
-
     @Override
-    public Account getAccountById(Long id) {
-        return accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+    public Account getAccountByUserId(Long userId) {
+        return accountRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Account not found for user ID: " + userId));
     }
 
     public void updateBalanceAfterTransaction(Account account, Transaction transaction, boolean isAdding) {
@@ -38,9 +39,9 @@ public class AccountServiceImpl implements AccountService {
         updateAccount(account);
     }
 
-
     @Override
     public Account updateAccount(Account account) {
         return accountRepository.save(account);
     }
+
 }
