@@ -1,6 +1,10 @@
 package com.finances.budgetmanagement.entity;
 
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,17 +16,23 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "The date cannot be blank")
     private LocalDate date;
 
+    @NotNull(message = "The amount cannot be empty")
+    @DecimalMin(value = "0.0", inclusive = false, message = "The amount must be greater than zero")
     private BigDecimal amount;
 
+    @Size(max = 255, message = "The description must not exceed 255 characters")
     private String description;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @NotNull(message = "Category is required")
     private Category category;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "Transaction type is required")
     private TransactionType transactionType;
 
     public Transaction() {

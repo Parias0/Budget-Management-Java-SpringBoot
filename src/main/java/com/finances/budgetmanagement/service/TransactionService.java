@@ -5,7 +5,6 @@ import com.finances.budgetmanagement.dto.TransactionDTO;
 
 import java.util.List;
 
-
 public interface TransactionService {
 
     TransactionDTO createTransaction(TransactionDTO transactionDTO);

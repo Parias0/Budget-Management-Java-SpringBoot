@@ -6,6 +6,8 @@ import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.entity.TransactionType;
+import com.finances.budgetmanagement.exception.CategoryNotFoundException;
+import com.finances.budgetmanagement.exception.TransactionNotFoundException;
 import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.service.AccountService;
@@ -13,7 +15,6 @@ import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,58 +32,73 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
-        Transaction transaction = mapToEntity(transactionDTO);
-        Transaction savedTransaction = transactionRepository.save(transaction);
+        try {
+            Transaction transaction = mapToEntity(transactionDTO);
+            Transaction savedTransaction = transactionRepository.save(transaction);
 
-        Account account = accountService.getAccountById(1L);
-        accountService.updateBalanceAfterTransaction(account, savedTransaction, true);
+            Account account = accountService.getAccountById(1L);
+            accountService.updateBalanceAfterTransaction(account, savedTransaction, true);
 
-        return mapToDTO(savedTransaction);
+            return mapToDTO(savedTransaction);
+        }catch (Exception e){
+            throw new RuntimeException("Error creating transaction: " +e.getMessage(), e);
+        }
     }
 
     @Override
     public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
-        Optional<Transaction> optionalTransaction = transactionRepository.findById(id);
-        if (!optionalTransaction.isPresent()) {
-            throw new RuntimeException("Transaction not found with id: " + id);
+
+        try {
+            Transaction transaction = transactionRepository.findById(id)
+                    .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+
+            Account account = accountService.getAccountById(1L);
+
+            // Cofnięcie starej transakcji
+            accountService.updateBalanceAfterTransaction(account, transaction, false);
+
+            // Aktualizacja danych transakcji
+            transaction.setDate(transactionDTO.getDate());
+            transaction.setAmount(transactionDTO.getAmount());
+            transaction.setDescription(transactionDTO.getDescription());
+            Category category = categoryRepository.findByName(transactionDTO.getCategoryName());
+            if (category == null) {
+                throw new CategoryNotFoundException("Category not found: " + transactionDTO.getCategoryName());
+            }
+            transaction.setCategory(category);
+            transaction.setTransactionType(TransactionType.valueOf(transactionDTO.getTransactionType()));
+
+            Transaction updatedTransaction = transactionRepository.save(transaction);
+
+            // Zastosowanie nowej transakcji
+            accountService.updateBalanceAfterTransaction(account, updatedTransaction, true);
+
+            return mapToDTO(updatedTransaction);
+        } catch (TransactionNotFoundException | CategoryNotFoundException ex) {
+            // Rzucamy specyficzny wyjątek, który zostanie obsłużony wyżej (np. przez ControllerAdvice)
+            throw ex;
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating transaction: " + e.getMessage(), e);
         }
-        Transaction transaction = optionalTransaction.get();
-
-        Account account = accountService.getAccountById(1L);
-
-        // Cofnięcie starej transakcji
-        accountService.updateBalanceAfterTransaction(account, transaction, false);
-
-        // Aktualizacja danych transakcji
-        transaction.setDate(transactionDTO.getDate());
-        transaction.setAmount(transactionDTO.getAmount());
-        transaction.setDescription(transactionDTO.getDescription());
-        Category category = categoryRepository.findByName(transactionDTO.getCategoryName());
-        transaction.setCategory(category);
-        transaction.setTransactionType(TransactionType.valueOf(transactionDTO.getTransactionType()));
-
-        Transaction updatedTransaction = transactionRepository.save(transaction);
-
-        // Zastosowanie nowej transakcji
-        accountService.updateBalanceAfterTransaction(account, updatedTransaction, true);
-
-        return mapToDTO(updatedTransaction);
     }
 
     @Override
     public void deleteTransaction(Long id) {
-        Optional<Transaction> optionalTransaction = transactionRepository.findById(id);
-        if (!optionalTransaction.isPresent()) {
-            throw new RuntimeException("Transaction not found with id: " + id);
+        try {
+            Transaction transaction = transactionRepository.findById(id)
+                    .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+
+            Account account = accountService.getAccountById(1L);
+
+            // Cofnięcie wpływu transakcji przed jej usunięciem
+            accountService.updateBalanceAfterTransaction(account, transaction, false);
+
+            transactionRepository.deleteById(id);
+        } catch (TransactionNotFoundException ex) {
+            throw ex;
+        } catch (Exception e) {
+            throw new RuntimeException("Error deleting transaction: " + e.getMessage(), e);
         }
-        Transaction transaction = optionalTransaction.get();
-
-        Account account = accountService.getAccountById(1L);
-
-        // Cofnięcie wpływu transakcji przed jej usunięciem
-        accountService.updateBalanceAfterTransaction(account, transaction, false);
-
-        transactionRepository.deleteById(id);
     }
 
 

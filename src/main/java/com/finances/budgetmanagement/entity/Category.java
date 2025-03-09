@@ -1,6 +1,8 @@
 package com.finances.budgetmanagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -11,6 +13,9 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Category name cannot be blank")
+    @Size(max = 50, message = "Category name must not exceed 50 characters")
+    @Column(unique = true)
     private String name;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)

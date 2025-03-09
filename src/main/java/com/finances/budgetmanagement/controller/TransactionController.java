@@ -3,11 +3,12 @@ package com.finances.budgetmanagement.controller;
 import com.finances.budgetmanagement.dto.MonthlySummaryDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.service.TransactionService;
-import org.apache.coyote.Response;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -20,14 +21,16 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
+
     @GetMapping
     public List<TransactionDTO> getAllTransactions(){
         return transactionService.getAllTransactions();
     }
 
     @PostMapping
-    public TransactionDTO createTransaction(@RequestBody TransactionDTO transactionDTO){
-        return transactionService.createTransaction(transactionDTO);
+    public ResponseEntity<String> createTransaction(@RequestBody TransactionDTO transactionDTO) {
+        transactionService.createTransaction(transactionDTO);
+        return new ResponseEntity<>("Transaction created successfully", HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
