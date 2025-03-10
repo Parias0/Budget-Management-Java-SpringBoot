@@ -63,7 +63,7 @@ public class TransactionControllerTest {
         transactionDTO.setTransactionType("EXPENSE");
 
         // Mockowanie wyjątku rzucanego przez serwis
-        when(transactionService.createTransaction(any(TransactionDTO.class), 1L))
+        when(transactionService.createTransaction(any(TransactionDTO.class)))
                 .thenThrow(new TransactionNotFoundException("Transaction not found!"));
 
         // Wykonanie żądania POST i sprawdzenie odpowiedzi
@@ -85,7 +85,7 @@ public class TransactionControllerTest {
         transactionDTO.setTransactionType("EXPENSE");
 
         // Symulacja poprawnego działania serwisu
-        when(transactionService.createTransaction(any(TransactionDTO.class), 1L))
+        when(transactionService.createTransaction(any(TransactionDTO.class)))
                 .thenReturn(transactionDTO);
 
         mockMvc.perform(post("/api/transactions")
@@ -107,7 +107,7 @@ public class TransactionControllerTest {
         updatedDTO.setTransactionType("INCOME");
 
         // Symulacja poprawnej aktualizacji transakcji przez serwis
-        when(transactionService.updateTransaction(eq(1L), any(TransactionDTO.class), 1L))
+        when(transactionService.updateTransaction(eq(1L), any(TransactionDTO.class)))
                 .thenReturn(updatedDTO);
 
         mockMvc.perform(put("/api/transactions/1")
@@ -125,7 +125,7 @@ public class TransactionControllerTest {
     @Test
     public void whenDeleteTransactionSuccessful_thenReturnOkMessage() throws Exception {
         // Zakładamy, że metoda deleteTransaction w serwisie nie rzuca wyjątku
-        doNothing().when(transactionService).deleteTransaction(1L, 1L);
+        doNothing().when(transactionService).deleteTransaction(1L);
 
         mockMvc.perform(delete("/api/transactions/remove/1"))
                 .andExpect(status().isOk())

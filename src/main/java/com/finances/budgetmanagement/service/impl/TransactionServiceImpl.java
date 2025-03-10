@@ -1,6 +1,5 @@
 package com.finances.budgetmanagement.service.impl;
 
-import com.finances.budgetmanagement.dto.MonthlySummaryDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Category;
@@ -12,6 +11,8 @@ import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.service.TransactionService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,9 +31,11 @@ public class TransactionServiceImpl implements TransactionService {
         this.accountService = accountService;
     }
 
-    public TransactionDTO createTransaction(TransactionDTO transactionDTO, Long userId) {
+    public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
         try {
-            Account account = accountService.getAccountByUserId(userId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            Account account = accountService.getAccountByUsername(username);
 
             // Mapowanie DTO do encji
             Transaction transaction = mapToEntity(transactionDTO);
@@ -51,14 +54,16 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO, Long userId) {
+    public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
         try {
             // Pobieramy transakcję
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
             // Pobieramy konto użytkownika
-            Account account = accountService.getAccountByUserId(userId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            Account account = accountService.getAccountByUsername(username);
 
             // Cofamy poprzednią transakcję
             accountService.updateBalanceAfterTransaction(account, transaction, false);
@@ -87,14 +92,15 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void deleteTransaction(Long id, Long userId) {
+    public void deleteTransaction(Long id) {
         try {
             // Pobieramy transakcję
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            // Pobieramy konto użytkownika
-            Account account = accountService.getAccountByUserId(userId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            Account account = accountService.getAccountByUsername(username);
 
             // Cofamy wpływ transakcji przed jej usunięciem
             accountService.updateBalanceAfterTransaction(account, transaction, false);
@@ -110,21 +116,17 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<TransactionDTO> getAllTransactions() {
-        return transactionRepository.findAll()
+        // Pobranie aktualnie zalogowanego użytkownika
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        // Pobranie transakcji tylko dla tego użytkownika
+        return transactionRepository.findByAccountUserUsername(username)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<MonthlySummaryDTO> getMonthlySummary(int year) {
-        return transactionRepository.getMonthlySummary(year);
-    }
-
-    @Override
-    public List<Integer> getAvailableYears() {
-        return transactionRepository.findDistinctYears();
-    }
 
     private TransactionDTO mapToDTO(Transaction transaction) {
         TransactionDTO dto = new TransactionDTO();

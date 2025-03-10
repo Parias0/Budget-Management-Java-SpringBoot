@@ -10,6 +10,8 @@ import com.finances.budgetmanagement.repository.RoleRepository;
 import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.security.JwtTokenUtil;
 import com.finances.budgetmanagement.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,14 +41,31 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AuthResponse authenticateUser(AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-        );
+    public AuthResponse authenticateUser(AuthRequest authRequest, HttpServletResponse response) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+            String token = jwtTokenUtil.generateToken(authentication.getName());
 
-        String token = jwtTokenUtil.generateToken(authentication.getName());
-        return new AuthResponse(token);
+            // Logowanie udanego logowania
+            System.out.println("User authenticated successfully: " + authRequest.getUsername());
+
+            Cookie jwtCookie = new Cookie("jwt", token);
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(false); // Ustaw na true, jeśli korzystasz z HTTPS
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(60 * 60 * 24);
+
+            response.addCookie(jwtCookie);
+            return new AuthResponse("User logged in successfully");
+        } catch (Exception e) {
+            // Logowanie błędu
+            System.out.println("Authentication failed: " + e.getMessage());
+            return new AuthResponse("Authentication failed");
+        }
     }
+
 
     @Override
     public String registerUser(AuthRequest authRequest) {
@@ -69,7 +88,6 @@ public class UserServiceImpl implements UserService {
         roles.add(userRole);
         user.setRoles(roles);
 
-        // Tworzenie konta z zerowym balansem
         Account account = new Account();
         account.setUser(user);
         user.getAccounts().add(account);
@@ -77,5 +95,18 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         return "User registered successfully";
+    }
+
+    @Override
+    public String logoutUser(HttpServletResponse response) {
+        Cookie jwtCookie = new Cookie("jwt", "");
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(false);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0);
+
+        response.addCookie(jwtCookie);
+
+        return "User logged out successfully";
     }
 }

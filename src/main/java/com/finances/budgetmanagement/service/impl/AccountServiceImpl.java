@@ -14,17 +14,21 @@ import java.math.BigDecimal;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
 
     public AccountServiceImpl(AccountRepository accountRepository, UserRepository userRepository) {
         this.accountRepository = accountRepository;
-        this.userRepository = userRepository;
     }
 
     @Override
     public Account getAccountByUserId(Long userId) {
         return accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Account not found for user ID: " + userId));
+    }
+
+    @Override
+    public Account getAccountByUsername(String username) {
+        return accountRepository.findByUser_Username(username)
+                .orElseThrow(() -> new RuntimeException("Account not found for username: " + username));
     }
 
     public void updateBalanceAfterTransaction(Account account, Transaction transaction, boolean isAdding) {

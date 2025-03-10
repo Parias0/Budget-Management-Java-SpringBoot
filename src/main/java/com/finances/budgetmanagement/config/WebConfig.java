@@ -11,8 +11,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // Ustawienie reguł CORS
-        registry.addMapping("/api/**")  // Ścieżka, na którą pozwalamy
-                .allowedOrigins("http://localhost:63342")  // Frontend, który ma dostęp do API
+        registry.addMapping("/**")  // Ścieżka, na którą pozwalamy
+                .allowedOrigins("http://localhost:8080")  // Frontend, który ma dostęp do API
                 .allowedMethods("GET", "POST", "PUT", "DELETE")  // Dozwolone metody
                 .allowedHeaders("*")  // Dozwolone nagłówki
                 .allowCredentials(true);  // Możliwość wysyłania ciasteczek i autentykacji

@@ -29,4 +29,9 @@ public class ViewController {
         return "reports"; // szuka pliku reports.html w templates
     }
 
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login"; // powinna wskazywać na widok Thymeleaf login.html
+    }
+
 }

@@ -21,6 +21,7 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
     private List<Transaction> transactions;
 
+
     public List<Transaction> getTransactions() {
         return transactions;
     }

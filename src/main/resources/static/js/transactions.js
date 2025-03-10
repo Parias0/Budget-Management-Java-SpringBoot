@@ -13,14 +13,28 @@ const rowsPerPage = 10;
 let allTransactions = [];
 
 // Funkcja ładująca saldo konta
-function loadAccountBalance(containerId) {
-  fetch('http://localhost:8080/api/accounts/balance')
-    .then(response => response.json())
-    .then(account => {
-      document.getElementById(containerId).innerHTML = `<h4>${account.balance} PLN</h4>`;
-    })
-    .catch(error => console.error('Error loading account balance:', error));
+function loadAccountBalance() {
+  fetch('http://localhost:8080/api/accounts/balance', {
+    method: 'GET',
+    credentials: 'include' // Upewnia się, że ciasteczka sesji są wysyłane
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Nie udało się pobrać salda');
+    }
+    return response.json();
+  })
+  .then(account => {
+    // Zaktualizowanie elementu h3 z saldem konta
+    document.getElementById('accountBalance').innerHTML = `<h4>${account.balance} PLN</h4>`;
+  })
+  .catch(error => console.error('Błąd ładowania salda:', error));
 }
+
+window.onload = function() {
+  loadAccountBalance(); // Załadowanie salda po załadowaniu strony
+};
+
 
 
 // Ładowanie dostępnych kategorii dla formularza dodawania transakcji
@@ -63,7 +77,7 @@ document.getElementById('transactionForm').addEventListener('submit', function(e
     alert('Transaction was added!');
     loadTransactions();
     loadAvailableYears();
-    loadAccountBalance('accountBalance2');
+    loadAccountBalance();
   })
   .catch(error => console.error('Error adding transaction:', error));
 });
@@ -73,6 +87,7 @@ function loadTransactions() {
   fetch('http://localhost:8080/api/transactions')
     .then(response => response.json())
     .then(transactions => {
+    console.log("Transactions loaded:", transactions);
       allTransactions = transactions;
       displayTransactions();
     })

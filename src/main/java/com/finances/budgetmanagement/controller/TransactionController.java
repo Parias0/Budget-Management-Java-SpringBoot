@@ -1,6 +1,5 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.MonthlySummaryDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.http.HttpStatus;
@@ -28,36 +27,22 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createTransaction(@RequestBody TransactionDTO transactionDTO,
-                                                    @RequestParam Long userId) {
-        transactionService.createTransaction(transactionDTO, userId);
+    public ResponseEntity<String> createTransaction(@RequestBody TransactionDTO transactionDTO) {
+        transactionService.createTransaction(transactionDTO);
         return new ResponseEntity<>("Transaction created successfully", HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TransactionDTO> updateTransaction(
             @PathVariable Long id,
-            @RequestBody TransactionDTO transactionDTO,
-            @RequestParam Long userId){
-        return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDTO, userId));
+            @RequestBody TransactionDTO transactionDTO){
+        return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDTO));
     }
 
     @DeleteMapping("/remove/{id}")
-    public ResponseEntity<String> deleteTransaction(@PathVariable Long id,
-                                                    @RequestParam Long userId){
-        transactionService.deleteTransaction(id, userId);
+    public ResponseEntity<String> deleteTransaction(@PathVariable Long id){
+        transactionService.deleteTransaction(id);
         return ResponseEntity.ok("Transaction deleted");
-    }
-
-
-    @GetMapping("/summary")
-    public List<MonthlySummaryDTO> getMonthlySummary(@RequestParam int year) {
-        return transactionService.getMonthlySummary(year);
-    }
-
-    @GetMapping("/available-years")
-    public List<Integer> getAvailableYears(){
-        return transactionService.getAvailableYears();
     }
 
 }

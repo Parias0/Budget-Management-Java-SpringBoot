@@ -3,6 +3,7 @@ package com.finances.budgetmanagement.controller;
 import com.finances.budgetmanagement.dto.AuthRequest;
 import com.finances.budgetmanagement.dto.AuthResponse;
 import com.finances.budgetmanagement.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +17,9 @@ public class AuthController {
 
     // Endpoint do logowania
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest authRequest) {
-        AuthResponse authResponse = userService.authenticateUser(authRequest);
+    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest authRequest, HttpServletResponse response) {
+
+        AuthResponse authResponse = userService.authenticateUser(authRequest, response);
         return ResponseEntity.ok(authResponse);
     }
 
@@ -29,5 +31,11 @@ public class AuthController {
             return ResponseEntity.badRequest().body(response);
         }
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logoutUser(HttpServletResponse response) {
+        String message = userService.logoutUser(response);
+        return ResponseEntity.ok(message);
     }
 }
