@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configure(http)) // Obsługa CORS
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/login", "/js/login.js", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/login", "/js/login.js", "/js/validation.js", "/api/auth/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

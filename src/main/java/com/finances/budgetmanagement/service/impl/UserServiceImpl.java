@@ -70,6 +70,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String registerUser(AuthRequest authRequest) {
+
+        if (authRequest.getUsername() == null || authRequest.getUsername().trim().isEmpty()) {
+            return "Username cannot be empty";
+        }
+        if (authRequest.getPassword() == null || authRequest.getPassword().trim().isEmpty()) {
+            return "Password cannot be empty";
+        }
+
         if (userRepository.findByUsername(authRequest.getUsername()).isPresent()) {
             return "Username is already taken";
         }
@@ -97,6 +105,7 @@ public class UserServiceImpl implements UserService {
 
         return "User registered successfully";
     }
+
 
     @Override
     public String logoutUser(HttpServletResponse response) {

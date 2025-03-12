@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -29,14 +31,15 @@ public class AuthController {
     }
 
 
-    // Endpoint do rejestracji użytkownika
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<Map<String, String>> registerUser(@RequestBody AuthRequest authRequest) {
         String response = userService.registerUser(authRequest);
-        if (response.equals("Username is already taken")) {
-            return ResponseEntity.badRequest().body(response);
+
+        if (response.equals("Username cannot be empty") || response.equals("Password cannot be empty") || response.equals("Username is already taken")) {
+            return ResponseEntity.badRequest().body(Map.of("message", response));
         }
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(Map.of("message", response));
     }
 
     @PostMapping("/logout")
