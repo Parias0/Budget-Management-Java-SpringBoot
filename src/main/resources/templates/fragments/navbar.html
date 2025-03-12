@@ -19,7 +19,11 @@
           <a class="nav-link" th:href="@{/categories}" th:text="'Categories'">Categories</a>
         </li>
         <li class="nav-item" th:classappend="${activePage}=='reports' ? 'active'">
-          <a class="nav-link" th:href="@{/reports}" th:text="'Reports'">Reports</a>
+          <a class="nav-link" th:href="@{/reports}" th:text="'Reports'">Reports (in progress)</a>
+        </li>
+        <!-- Przycisk Wylogowanie -->
+        <li class="nav-item">
+          <button class="btn btn-danger" onclick="logoutUser()">Logout</button>
         </li>
       </ul>
     </div>

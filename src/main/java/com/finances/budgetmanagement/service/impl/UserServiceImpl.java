@@ -48,23 +48,24 @@ public class UserServiceImpl implements UserService {
             );
             String token = jwtTokenUtil.generateToken(authentication.getName());
 
-            // Logowanie udanego logowania
             System.out.println("User authenticated successfully: " + authRequest.getUsername());
 
             Cookie jwtCookie = new Cookie("jwt", token);
             jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(false); // Ustaw na true, jeśli korzystasz z HTTPS
+            jwtCookie.setSecure(false);
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(60 * 60 * 24);
 
             response.addCookie(jwtCookie);
             return new AuthResponse("User logged in successfully");
         } catch (Exception e) {
-            // Logowanie błędu
             System.out.println("Authentication failed: " + e.getMessage());
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return new AuthResponse("Authentication failed");
         }
     }
+
 
 
     @Override
