@@ -4,8 +4,6 @@ import com.finances.budgetmanagement.dto.AccountDTO;
 import com.finances.budgetmanagement.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -19,20 +17,19 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+
     @GetMapping
-    public ResponseEntity<List<AccountDTO>> getAccounts() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        List<AccountDTO> accounts = accountService.getAccountsByUsername(username);
+    public ResponseEntity<List<AccountDTO>> getUserAccounts() {
+        List<AccountDTO> accounts = accountService.getAllUserAccounts();
         return ResponseEntity.ok(accounts);
     }
 
-
     @PostMapping
-    public ResponseEntity<String> createAccount(@RequestBody AccountDTO accountDTO) {
-        accountService.createAccount(accountDTO);
-        return new ResponseEntity<>("Transaction created successfully", HttpStatus.CREATED);
+    public ResponseEntity<AccountDTO> createAccount(@RequestBody AccountDTO accountDTO) {
+        AccountDTO createdAccount = accountService.createAccount(accountDTO);
+        return new ResponseEntity<>(createdAccount, HttpStatus.CREATED);
     }
+
 
     @PutMapping("/{accountId}")
     public ResponseEntity<AccountDTO> updateAccount(@PathVariable Long accountId, @RequestBody AccountDTO accountDTO) {

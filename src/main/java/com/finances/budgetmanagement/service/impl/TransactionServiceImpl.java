@@ -11,8 +11,7 @@ import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.service.TransactionService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,8 +33,8 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = SecurityUtil.getCurrentUsername();
+
             Account account;
             // Jeśli DTO zawiera accountId, pobieramy konto po tym ID i weryfikujemy własność
             if (transactionDTO.getAccountId() != null) {
@@ -56,7 +55,7 @@ public class TransactionServiceImpl implements TransactionService {
             Transaction savedTransaction = transactionRepository.save(transaction);
 
             // Aktualizacja salda po transakcji (dodajemy kwotę)
-            accountService.updateBalanceAfterTransaction(savedTransaction, true);
+            accountService.adjustBalance(account, savedTransaction, true);
 
             TransactionDTO resultDTO = mapToDTO(savedTransaction);
             resultDTO.setAccountId(account.getId());
@@ -68,55 +67,65 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
-        try {
-            // Pobieramy istniejącą transakcję
-            Transaction transaction = transactionRepository.findById(id)
-                    .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            // Pobieramy aktualnego użytkownika
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            Account account;
-            // Jeśli w DTO podano accountId, pobieramy konto po nim, w przeciwnym razie używamy konta przypisanego do transakcji
-            if (transactionDTO.getAccountId() != null) {
-                account = accountService.getAccountById(transactionDTO.getAccountId());
-                if (!account.getUser().getUsername().equals(username)) {
-                    throw new RuntimeException("Account does not belong to the current user");
-                }
-            } else {
-                account = transaction.getAccount();
-                if (!account.getUser().getUsername().equals(username)) {
-                    throw new RuntimeException("Transaction account does not belong to the current user");
-                }
-            }
+        String username = SecurityUtil.getCurrentUsername();
 
-            // Cofamy wpływ poprzedniej transakcji (odwracamy jej działanie na saldzie)
-            accountService.updateBalanceAfterTransaction(transaction, false);
 
-            // Aktualizacja danych transakcji
-            transaction.setDate(transactionDTO.getDate());
-            transaction.setAmount(transactionDTO.getAmount());
-            transaction.setDescription(transactionDTO.getDescription());
-            Category category = categoryRepository.findByName(transactionDTO.getCategoryName());
-            if (category == null) {
-                throw new CategoryNotFoundException("Category not found: " + transactionDTO.getCategoryName());
-            }
-            transaction.setCategory(category);
-            transaction.setTransactionType(TransactionType.valueOf(transactionDTO.getTransactionType()));
-
-            // Zapisanie zaktualizowanej transakcji
-            Transaction updatedTransaction = transactionRepository.save(transaction);
-
-            // Zastosowanie nowej transakcji (aktualizacja salda)
-            accountService.updateBalanceAfterTransaction(updatedTransaction, true);
-
-            TransactionDTO resultDTO = mapToDTO(updatedTransaction);
-            resultDTO.setAccountId(account.getId());
-            return resultDTO;
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating transaction: " + e.getMessage(), e);
+        Account oldAccount = transaction.getAccount();
+        if (!oldAccount.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Transaction account does not belong to the current user");
         }
+
+        Account newAccount = oldAccount;
+        boolean accountChanged = transactionDTO.getAccountId() != null && !oldAccount.getId().equals(transactionDTO.getAccountId());
+
+        TransactionType oldType = transaction.getTransactionType();
+        TransactionType newType = TransactionType.valueOf(transactionDTO.getTransactionType());
+        boolean typeChanged = !oldType.equals(newType);
+
+        // Cofnięcie wpływu starej transakcji
+        accountService.adjustBalance(oldAccount, transaction, false);
+
+        if (accountChanged) {
+            // Pobranie nowego konta
+            newAccount = accountService.getAccountById(transactionDTO.getAccountId());
+            if (!newAccount.getUser().getUsername().equals(username)) {
+                throw new RuntimeException("New account does not belong to the current user");
+            }
+            transaction.setAccount(newAccount);
+        }
+
+        if (typeChanged) {
+            transaction.setTransactionType(newType);
+        }
+
+        // Aktualizacja danych transakcji
+        transaction.setDate(transactionDTO.getDate());
+        transaction.setAmount(transactionDTO.getAmount());
+        transaction.setDescription(transactionDTO.getDescription());
+
+        Category category = categoryRepository.findByName(transactionDTO.getCategoryName());
+        if (category == null) {
+            throw new CategoryNotFoundException("Category not found: " + transactionDTO.getCategoryName());
+        }
+        transaction.setCategory(category);
+
+        // Zapisanie zmian
+        Transaction updatedTransaction = transactionRepository.save(transaction);
+
+        // Zastosowanie wpływu nowej transakcji
+        accountService.adjustBalance(newAccount, updatedTransaction, true);
+
+        // Zwrot DTO
+        TransactionDTO resultDTO = mapToDTO(updatedTransaction);
+        resultDTO.setAccountId(transaction.getAccount().getId());
+        return resultDTO;
     }
+
+
+
 
     @Override
     public void deleteTransaction(Long id) {
@@ -125,8 +134,7 @@ public class TransactionServiceImpl implements TransactionService {
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = SecurityUtil.getCurrentUsername();
 
             Account account = transaction.getAccount();
 
@@ -136,7 +144,7 @@ public class TransactionServiceImpl implements TransactionService {
             }
 
             // Cofamy wpływ transakcji przed jej usunięciem
-            accountService.updateBalanceAfterTransaction(transaction, false);
+            accountService.adjustBalance(account,transaction, false);
 
             // Usuwamy transakcję
             transactionRepository.deleteById(id);
@@ -150,8 +158,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<TransactionDTO> getAllTransactions() {
         // Pobieramy transakcje zalogowanego użytkownika
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        String username = SecurityUtil.getCurrentUsername();
 
         return transactionRepository.findByAccountUserUsername(username)
                 .stream()
@@ -187,4 +194,7 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionType(TransactionType.valueOf(dto.getTransactionType()));
         return transaction;
     }
+
+
+
 }

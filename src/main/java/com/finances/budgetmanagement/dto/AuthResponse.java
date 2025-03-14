@@ -1,13 +1,13 @@
 package com.finances.budgetmanagement.dto;
 
 public class AuthResponse {
-    private String token;
+    private String message;
 
-    public AuthResponse(String token) {
-        this.token = token;
+    public AuthResponse(String message) {
+        this.message = message;
     }
 
-    public String getToken() {
-        return token;
+    public String getMessage() {
+        return message;
     }
 }

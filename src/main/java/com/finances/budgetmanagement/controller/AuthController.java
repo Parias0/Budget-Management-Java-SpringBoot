@@ -16,14 +16,18 @@ import java.util.Map;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
 
     // Endpoint do logowania
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest authRequest, HttpServletResponse response) {
         AuthResponse authResponse = userService.authenticateUser(authRequest, response);
 
-        if ("Authentication failed".equals(authResponse.getToken())) {
+        if ("Authentication failed".equals(authResponse.getMessage())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
         }
 

@@ -52,7 +52,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
 
-        try{
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new CategoryNotFoundException("Category not fount with id: " + id));
 
@@ -61,9 +60,6 @@ public class CategoryServiceImpl implements CategoryService {
             Category updatedCategory = categoryRepository.save(category);
 
             return mapToDTO(updatedCategory);
-        }catch (Exception e){
-            throw new RuntimeException("Error updating category: " + e.getMessage(), e);
-        }
     }
 
 

@@ -7,9 +7,7 @@ import java.util.List;
 
 public interface AccountService {
 
-    List<AccountDTO> getAccountsByUsername(String username);
-
-    Account getAccountEntityByUsername(String username);
+    List<AccountDTO> getAllUserAccounts();
 
     AccountDTO createAccount(AccountDTO accountDTO);
 
@@ -17,11 +15,13 @@ public interface AccountService {
 
     void deleteAccount(Long accountId);
 
-    List<AccountDTO> getAccountsByUserId(Long userId);
 
     Account getAccountById(Long accountId);
 
+    List<AccountDTO> getAccountsByUsername(String username);
 
-    // Pozostawiamy metodę aktualizacji salda – operuje na encji, gdyż transakcje mogą być zewnętrzną logiką
-    void updateBalanceAfterTransaction(Transaction transaction, boolean isAdding);
+    Account getAccountEntityByUsername(String username);
+
+    void adjustBalance(Account account, Transaction transaction, boolean isAdding);
+
 }

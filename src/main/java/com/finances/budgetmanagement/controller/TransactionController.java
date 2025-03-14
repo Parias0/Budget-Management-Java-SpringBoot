@@ -27,9 +27,9 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createTransaction(@RequestBody TransactionDTO transactionDTO) {
-        transactionService.createTransaction(transactionDTO);
-        return new ResponseEntity<>("Transaction created successfully", HttpStatus.CREATED);
+    public ResponseEntity<TransactionDTO> createTransaction(@RequestBody TransactionDTO transactionDTO) {
+        TransactionDTO createdTransaction = transactionService.createTransaction(transactionDTO);
+        return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

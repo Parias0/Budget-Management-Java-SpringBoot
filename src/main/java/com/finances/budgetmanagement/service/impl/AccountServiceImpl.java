@@ -8,6 +8,7 @@ import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.repository.AccountRepository;
 import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.service.AccountService;
+import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,27 +28,15 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<AccountDTO> getAccountsByUsername(String username) {
-        List<Account> accounts = accountRepository.findAllByUser_Username(username);
-        if (accounts.isEmpty()) {
-            throw new RuntimeException("No accounts found for username: " + username);
-        }
-        return accounts.stream().map(this::convertToDTO).collect(Collectors.toList());
+    public List<AccountDTO> getAllUserAccounts() {
+        String username = SecurityUtil.getCurrentUsername();
+        return getAccountsByUsername(username);
     }
-
-
-    @Override
-    public Account getAccountEntityByUsername(String username) {
-        return accountRepository.findByUser_Username(username)
-                .orElseThrow(() -> new RuntimeException("Account not found for username: " + username));
-    }
-
 
     @Override
     public AccountDTO createAccount(AccountDTO accountDTO) {
-        // Pobieramy aktualnie zalogowanego użytkownika
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+
+        String username = SecurityUtil.getCurrentUsername();
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
@@ -79,38 +68,44 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<AccountDTO> getAccountsByUserId(Long userId) {
-        List<Account> accounts = accountRepository.findAllByUserId(userId);
-        return accounts.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public Account getAccountById(Long accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found with ID: " + accountId));
     }
 
+    @Override
+    public List<AccountDTO> getAccountsByUsername(String username) {
+        List<Account> accounts = accountRepository.findAllByUser_Username(username);
+        if (accounts.isEmpty()) {
+            throw new RuntimeException("No accounts found for username: " + username);
+        }
+        return accounts.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
 
     @Override
-    public void updateBalanceAfterTransaction(Transaction transaction, boolean isAdding) {
-        Account account = transaction.getAccount();
+    public Account getAccountEntityByUsername(String username) {
+        return accountRepository.findByUser_Username(username)
+                .orElseThrow(() -> new RuntimeException("Account not found for username: " + username));
+    }
+
+
+    @Override
+    public void adjustBalance(Account account, Transaction transaction, boolean isAdding) {
         if (account == null) {
             throw new RuntimeException("Transaction is not associated with any account.");
         }
 
         BigDecimal amount = transaction.getAmount();
-        if (transaction.getTransactionType() == TransactionType.INCOME) {
-            account.setBalance(isAdding ? account.getBalance().add(amount) : account.getBalance().subtract(amount));
-        } else { // EXPENSE
-            account.setBalance(isAdding ? account.getBalance().subtract(amount) : account.getBalance().add(amount));
-        }
+        BigDecimal newBalance = transaction.getTransactionType() == TransactionType.INCOME
+                ? account.getBalance().add(isAdding ? amount : amount.negate())
+                : account.getBalance().subtract(isAdding ? amount : amount.negate());
+
+        account.setBalance(newBalance);
         accountRepository.save(account);
     }
 
 
-    // Pomocnicza metoda konwertująca encję na DTO
     private AccountDTO convertToDTO(Account account) {
         return new AccountDTO(account.getId(), account.getBalance(), account.getName());
     }
