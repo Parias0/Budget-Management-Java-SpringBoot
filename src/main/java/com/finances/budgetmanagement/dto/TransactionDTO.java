@@ -11,17 +11,28 @@ public class TransactionDTO {
     private String description;
     private String categoryName;
     private String transactionType;
+    private Long accountId;
 
 
     public TransactionDTO() {
     }
 
-    public TransactionDTO(Long id, String categoryName, String description, BigDecimal amount, LocalDate date) {
+    public TransactionDTO(Long id, LocalDate date, BigDecimal amount, String description, String categoryName, String transactionType, Long accountId) {
         this.id = id;
-        this.categoryName = categoryName;
-        this.description = description;
-        this.amount = amount;
         this.date = date;
+        this.amount = amount;
+        this.description = description;
+        this.categoryName = categoryName;
+        this.transactionType = transactionType;
+        this.accountId = accountId;
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
     }
 
     public String getTransactionType() {

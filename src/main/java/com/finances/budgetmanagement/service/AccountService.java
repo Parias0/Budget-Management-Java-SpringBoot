@@ -1,15 +1,27 @@
 package com.finances.budgetmanagement.service;
 
+import com.finances.budgetmanagement.dto.AccountDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Transaction;
+import java.util.List;
 
 public interface AccountService {
 
-    Account getAccountByUserId (Long userId);
+    List<AccountDTO> getAccountsByUsername(String username);
 
-    Account getAccountByUsername(String username);
+    Account getAccountEntityByUsername(String username);
 
-    Account updateAccount (Account account);
+    AccountDTO createAccount(AccountDTO accountDTO);
 
-    void updateBalanceAfterTransaction(Account account, Transaction transaction, boolean isAdding);
+    AccountDTO updateAccount(AccountDTO accountDTO);
+
+    void deleteAccount(Long accountId);
+
+    List<AccountDTO> getAccountsByUserId(Long userId);
+
+    Account getAccountById(Long accountId);
+
+
+    // Pozostawiamy metodę aktualizacji salda – operuje na encji, gdyż transakcje mogą być zewnętrzną logiką
+    void updateBalanceAfterTransaction(Transaction transaction, boolean isAdding);
 }

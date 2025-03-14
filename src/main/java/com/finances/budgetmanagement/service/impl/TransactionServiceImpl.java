@@ -31,23 +31,36 @@ public class TransactionServiceImpl implements TransactionService {
         this.accountService = accountService;
     }
 
+    @Override
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            Account account = accountService.getAccountByUsername(username);
+            Account account;
+            // Jeśli DTO zawiera accountId, pobieramy konto po tym ID i weryfikujemy własność
+            if (transactionDTO.getAccountId() != null) {
+                account = accountService.getAccountById(transactionDTO.getAccountId());
+                if (!account.getUser().getUsername().equals(username)) {
+                    throw new RuntimeException("Account does not belong to the current user");
+                }
+            } else {
+                // W przeciwnym wypadku pobieramy domyślne konto użytkownika
+                account = accountService.getAccountEntityByUsername(username);
+            }
 
             // Mapowanie DTO do encji
             Transaction transaction = mapToEntity(transactionDTO);
-            transaction.setAccount(account); // przypisujemy konto użytkownika do transakcji
+            transaction.setAccount(account);
 
             // Zapisanie transakcji
             Transaction savedTransaction = transactionRepository.save(transaction);
 
-            // Aktualizacja salda po transakcji
-            accountService.updateBalanceAfterTransaction(account, savedTransaction, true);
+            // Aktualizacja salda po transakcji (dodajemy kwotę)
+            accountService.updateBalanceAfterTransaction(savedTransaction, true);
 
-            return mapToDTO(savedTransaction);
+            TransactionDTO resultDTO = mapToDTO(savedTransaction);
+            resultDTO.setAccountId(account.getId());
+            return resultDTO;
         } catch (Exception e) {
             throw new RuntimeException("Error creating transaction: " + e.getMessage(), e);
         }
@@ -56,19 +69,31 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
         try {
-            // Pobieramy transakcję
+            // Pobieramy istniejącą transakcję
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            // Pobieramy konto użytkownika
+            // Pobieramy aktualnego użytkownika
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            Account account = accountService.getAccountByUsername(username);
+            Account account;
+            // Jeśli w DTO podano accountId, pobieramy konto po nim, w przeciwnym razie używamy konta przypisanego do transakcji
+            if (transactionDTO.getAccountId() != null) {
+                account = accountService.getAccountById(transactionDTO.getAccountId());
+                if (!account.getUser().getUsername().equals(username)) {
+                    throw new RuntimeException("Account does not belong to the current user");
+                }
+            } else {
+                account = transaction.getAccount();
+                if (!account.getUser().getUsername().equals(username)) {
+                    throw new RuntimeException("Transaction account does not belong to the current user");
+                }
+            }
 
-            // Cofamy poprzednią transakcję
-            accountService.updateBalanceAfterTransaction(account, transaction, false);
+            // Cofamy wpływ poprzedniej transakcji (odwracamy jej działanie na saldzie)
+            accountService.updateBalanceAfterTransaction(transaction, false);
 
-            // Mapowanie danych do zaktualizowanej transakcji
+            // Aktualizacja danych transakcji
             transaction.setDate(transactionDTO.getDate());
             transaction.setAmount(transactionDTO.getAmount());
             transaction.setDescription(transactionDTO.getDescription());
@@ -79,13 +104,15 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setCategory(category);
             transaction.setTransactionType(TransactionType.valueOf(transactionDTO.getTransactionType()));
 
-            // Zapisanie transakcji
+            // Zapisanie zaktualizowanej transakcji
             Transaction updatedTransaction = transactionRepository.save(transaction);
 
-            // Zastosowanie nowej transakcji
-            accountService.updateBalanceAfterTransaction(account, updatedTransaction, true);
+            // Zastosowanie nowej transakcji (aktualizacja salda)
+            accountService.updateBalanceAfterTransaction(updatedTransaction, true);
 
-            return mapToDTO(updatedTransaction);
+            TransactionDTO resultDTO = mapToDTO(updatedTransaction);
+            resultDTO.setAccountId(account.getId());
+            return resultDTO;
         } catch (Exception e) {
             throw new RuntimeException("Error updating transaction: " + e.getMessage(), e);
         }
@@ -94,16 +121,22 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public void deleteTransaction(Long id) {
         try {
-            // Pobieramy transakcję
+            // Pobieramy transakcję do usunięcia
             Transaction transaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            Account account = accountService.getAccountByUsername(username);
+
+            Account account = transaction.getAccount();
+
+            // Sprawdzenie, czy użytkownik ma dostęp do konta, do którego przypisana jest transakcja
+            if (!account.getUser().getUsername().equals(username)) {
+                throw new RuntimeException("Transaction does not belong to the current user");
+            }
 
             // Cofamy wpływ transakcji przed jej usunięciem
-            accountService.updateBalanceAfterTransaction(account, transaction, false);
+            accountService.updateBalanceAfterTransaction(transaction, false);
 
             // Usuwamy transakcję
             transactionRepository.deleteById(id);
@@ -116,18 +149,17 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<TransactionDTO> getAllTransactions() {
-        // Pobranie aktualnie zalogowanego użytkownika
+        // Pobieramy transakcje zalogowanego użytkownika
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        // Pobranie transakcji tylko dla tego użytkownika
         return transactionRepository.findByAccountUserUsername(username)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
-
+    // Mapowanie encji Transaction do DTO (dodajemy accountId)
     private TransactionDTO mapToDTO(Transaction transaction) {
         TransactionDTO dto = new TransactionDTO();
         dto.setId(transaction.getId());
@@ -136,9 +168,11 @@ public class TransactionServiceImpl implements TransactionService {
         dto.setDescription(transaction.getDescription());
         dto.setCategoryName(transaction.getCategory().getName());
         dto.setTransactionType(transaction.getTransactionType().toString());
+        dto.setAccountId(transaction.getAccount().getId());
         return dto;
     }
 
+    // Mapowanie DTO do encji Transaction
     private Transaction mapToEntity(TransactionDTO dto) {
         Transaction transaction = new Transaction();
         transaction.setDate(dto.getDate());
@@ -153,5 +187,4 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionType(TransactionType.valueOf(dto.getTransactionType()));
         return transaction;
     }
-
 }

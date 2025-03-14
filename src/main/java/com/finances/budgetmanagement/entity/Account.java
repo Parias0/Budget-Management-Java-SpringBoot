@@ -2,6 +2,8 @@ package com.finances.budgetmanagement.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +17,9 @@ public class Account {
 
     private BigDecimal balance;
 
+    @NotBlank
+    private String name;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
@@ -27,10 +32,12 @@ public class Account {
         this.balance = BigDecimal.ZERO;
     }
 
-    public Account(BigDecimal balance) {
+    public Account(BigDecimal balance, String name) {
         this.balance = balance;
+        this.name = name;
     }
 
+    // Gettery i settery
     public Long getId() {
         return id;
     }
@@ -45,6 +52,14 @@ public class Account {
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public User getUser() {

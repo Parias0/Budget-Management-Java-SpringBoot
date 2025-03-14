@@ -39,7 +39,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDTO));
     }
 
-    @DeleteMapping("/remove/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteTransaction(@PathVariable Long id){
         transactionService.deleteTransaction(id);
         return ResponseEntity.ok("Transaction deleted");

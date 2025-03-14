@@ -2,7 +2,6 @@ package com.finances.budgetmanagement.service.impl;
 
 import com.finances.budgetmanagement.dto.AuthRequest;
 import com.finances.budgetmanagement.dto.AuthResponse;
-import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Role;
 import com.finances.budgetmanagement.entity.User;
 import com.finances.budgetmanagement.enums.RoleName;
@@ -96,10 +95,6 @@ public class UserServiceImpl implements UserService {
         Set<Role> roles = new HashSet<>();
         roles.add(userRole);
         user.setRoles(roles);
-
-        Account account = new Account();
-        account.setUser(user);
-        user.getAccounts().add(account);
 
         userRepository.save(user);
 
