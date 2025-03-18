@@ -9,8 +9,6 @@ import com.finances.budgetmanagement.repository.AccountRepository;
 import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.utils.SecurityUtil;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;

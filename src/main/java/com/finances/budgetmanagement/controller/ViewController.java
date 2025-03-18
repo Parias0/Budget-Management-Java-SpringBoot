@@ -34,4 +34,9 @@ public class ViewController {
         return "login"; // powinna wskazywać na widok Thymeleaf login.html
     }
 
+    @GetMapping("/accounts")
+    public String accounts(){
+        return "accounts";
+    }
+
 }

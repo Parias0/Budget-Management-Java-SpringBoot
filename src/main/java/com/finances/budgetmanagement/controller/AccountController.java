@@ -1,6 +1,7 @@
 package com.finances.budgetmanagement.controller;
 
 import com.finances.budgetmanagement.dto.AccountDTO;
+import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,13 @@ public class AccountController {
         List<AccountDTO> accounts = accountService.getAllUserAccounts();
         return ResponseEntity.ok(accounts);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Account> getAccountById(@PathVariable Long id) {
+        Account account = accountService.getAccountById(id);
+        return ResponseEntity.ok(account);
+    }
+
 
     @PostMapping
     public ResponseEntity<AccountDTO> createAccount(@RequestBody AccountDTO accountDTO) {

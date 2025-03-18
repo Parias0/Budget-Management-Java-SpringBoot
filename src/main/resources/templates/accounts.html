@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<div layout:fragment="content">
+  <h1 class="display-2 text-center mb-4">Manage Your Accounts</h1>
+  <div id="alert-container" class="col-auto text-center justify-content-center"></div>
+  <section class="d-flex justify-content-center min-vh-100">
+    <div class="row w-100 justify-content-center">
+      <div class="col-md-4">
+        <div class="card p-4">
+
+          <h2 class="lead mb-4">Create New Account</h2>
+          <form id="create-account-form">
+            <div class="mb-3">
+              <label for="account-name" class="form-label">Account Name</label>
+              <input type="text" class="form-control" id="account-name" placeholder="Account Name" required>
+            </div>
+            <div class="mb-3">
+              <label for="account-balance" class="form-label">Initial Balance</label>
+              <input type="number" class="form-control" id="account-balance" placeholder="Initial Balance" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Account</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Lista kont -->
+      <div class="col-md-4">
+        <div class="card p-4">
+          <h2 class="lead mb-4">Your Accounts</h2>
+          <ul id="accounts-list" class="list-group">
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal do edytowania lub usuwania konta -->
+    <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="accountModalLabel">Edit or Delete Account</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="edit-account-form">
+              <div class="mb-3">
+                <label for="account-name-modal" class="form-label">Account Name</label>
+                <input type="text" class="form-control" id="account-name-modal" required>
+              </div>
+              <div class="mb-3">
+                <label for="account-balance-modal" class="form-label">Account Balance</label>
+                <input type="number" class="form-control" id="account-balance-modal" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer" id="modal-buttons">
+            <!-- Przyciski do edycji i usunięcia pojawią się dynamicznie -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+  </section>
+
+  <!-- Skrypt musi być załadowany na końcu, po załadowaniu strony -->
+  <script src="/js/accounts.js" type="module"></script>
+
+</div>
+</body>
+</html>

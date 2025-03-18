@@ -1,31 +1,56 @@
 <!-- fragments/navbar.html -->
-<div th:fragment="navbar">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-    <a class="navbar-brand" href="#" th:text="'Budget Management'">Budget Management</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ml-auto">
-        <!-- Nowy przycisk Home -->
-        <li class="nav-item" th:classappend="${activePage}=='home' ? 'active'">
-          <a class="nav-link" th:href="@{/}" th:text="'Home'">Home</a>
-        </li>
-        <li class="nav-item" th:classappend="${activePage}=='transactions' ? 'active'">
-          <a class="nav-link" th:href="@{/transactions}" th:text="'Transactions'">Transactions</a>
-        </li>
-        <li class="nav-item" th:classappend="${activePage}=='categories' ? 'active'">
-          <a class="nav-link" th:href="@{/categories}" th:text="'Categories'">Categories</a>
-        </li>
-        <li class="nav-item" th:classappend="${activePage}=='reports' ? 'active'">
-          <a class="nav-link" th:href="@{/reports}" th:text="'Reports'">Reports (in progress)</a>
-        </li>
-        <!-- Przycisk Wylogowanie -->
-        <li class="nav-item">
-          <button class="btn btn-danger" onclick="logoutUser()">Logout</button>
-        </li>
-      </ul>
-    </div>
-  </nav>
+<div th:fragment="navbar" class="d-flex flex-column sidebar vh-100">
+  <ul class="nav flex-column align-items-center">
+    <!-- Home -->
+    <li class="nav-item">
+      <a class="nav-link" th:href="@{/}" data-bs-toggle="tooltip" data-bs-placement="right" title="Home">
+        <i class="bi bi-house-door fs-3"></i>
+      </a>
+    </li>
+
+    <!-- Accounts -->
+    <li class="nav-item">
+      <a class="nav-link" th:href="@{/accounts}" data-bs-toggle="tooltip" data-bs-placement="right" title="Accounts">
+        <i class="bi bi-wallet2 fs-3"></i>
+      </a>
+    </li>
+
+    <!-- Transactions -->
+    <li class="nav-item">
+      <a class="nav-link" th:href="@{/transactions}" data-bs-toggle="tooltip" data-bs-placement="right" title="Transactions">
+        <i class="bi bi-cash-coin fs-3"></i>
+      </a>
+    </li>
+
+    <!-- Categories -->
+    <li class="nav-item">
+      <a class="nav-link" th:href="@{/categories}" data-bs-toggle="tooltip" data-bs-placement="right" title="Categories">
+        <i class="bi bi-tags fs-3"></i>
+      </a>
+    </li>
+
+    <!-- Reports -->
+    <li class="nav-item">
+      <a class="nav-link" th:href="@{/reports}" data-bs-toggle="tooltip" data-bs-placement="right" title="Reports">
+        <i class="bi bi-bar-chart fs-3"></i>
+      </a>
+    </li>
+
+    <!-- Logout -->
+    <li class="nav-item mt-auto">
+      <button class="btn btn-danger w-100" onclick="logoutUser()">
+        <i class="bi bi-box-arrow-right fs-3"></i>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Bootstrap Tooltip Initialization -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+  </script>
 </div>

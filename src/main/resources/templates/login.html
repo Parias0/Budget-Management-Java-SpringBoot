@@ -6,12 +6,12 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-dark vh-100 d-flex align-items-center bg-opacity-50">
+<body class="bg-dark vh-100 d-flex align-items-center ">
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-5">
+        <div class="col-md-6">
             <div class="card shadow rounded-3">
-                <div class="card-header text-center bg-light text-uppercase fw-bold rounded-top" id="formTitle">
+                <div class="card-header text-center text-uppercase fw-bold rounded-top" id="formTitle">
                     Login
                 </div>
                 <div class="card-body p-4">
@@ -21,16 +21,16 @@
 
                     <!-- Formularz logowania -->
                     <form id="loginForm" th:action="@{/login}" method="post" class="needs-validation" novalidate>
-                        <div class="mb-3">
-                            <label for="loginUsername" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="loginUsername" required>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="loginUsername" name="username" placeholder="Username" required>
+                            <label for="loginUsername">Username</label>
                             <div class="invalid-feedback">
                                 Please provide a valid username.
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="loginPassword" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="loginPassword" name="password" required>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="Password" required>
+                            <label for="loginPassword">Password</label>
                             <div class="invalid-feedback">
                                 Password is required.
                             </div>
@@ -54,6 +54,13 @@
                             <input type="password" class="form-control" id="registerPassword" name="password" required>
                             <div class="invalid-feedback">
                                 Password is required.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                            <div class="invalid-feedback">
+                                Please confirm your password.
                             </div>
                         </div>
                         <div class="d-grid mb-3">
