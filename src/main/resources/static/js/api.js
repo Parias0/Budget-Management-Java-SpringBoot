@@ -89,7 +89,8 @@ const TransactionsAPI = {
   createTransaction: (transactionData) => apiPost('/transactions', transactionData),
   updateTransaction: (transactionId, transactionData) => apiPut(`/transactions/${transactionId}`, transactionData),
   deleteTransaction: (transactionId) => apiDelete(`/transactions/${transactionId}`),
-};
+  getClientCategoryData: (month) => apiGet(`/transactions/monthly-category-expenses?month=${month}`),
+  };
 
 // Auth API
 const AuthAPI = {

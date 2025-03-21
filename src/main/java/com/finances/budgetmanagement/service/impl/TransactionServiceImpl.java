@@ -1,5 +1,7 @@
 package com.finances.budgetmanagement.service.impl;
 
+import com.finances.budgetmanagement.dto.CategoryExpensesDTO;
+import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesResponse;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Category;
@@ -14,7 +16,11 @@ import com.finances.budgetmanagement.service.TransactionService;
 import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -165,6 +171,51 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+    public MonthlyCategoryExpensesResponse getMonthlyCategoryExpenses(YearMonth month) {
+        String username = SecurityUtil.getCurrentUsername();
+        LocalDate startDate = month.atDay(1);
+        LocalDate endDate = month.atEndOfMonth();
+
+        List<Transaction> expenses = transactionRepository.findByAccountUserUsernameAndTransactionTypeAndDateBetween(
+                username,
+                TransactionType.EXPENSE,
+                startDate,
+                endDate
+        );
+
+        // Grupowanie transakcji po kategoriach
+        Map<Category, List<Transaction>> transactionsByCategory = expenses.stream()
+                .collect(Collectors.groupingBy(Transaction::getCategory));
+
+        // Tworzenie DTO dla kategorii
+        List<CategoryExpensesDTO> categoryExpenses = transactionsByCategory.entrySet().stream()
+                .map(entry -> {
+                    Category category = entry.getKey();
+                    List<Transaction> categoryTransactions = entry.getValue();
+
+                    BigDecimal categoryTotal = categoryTransactions.stream()
+                            .map(Transaction::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return new CategoryExpensesDTO(
+                            category.getName(),
+                            categoryTotal,
+                            categoryTransactions.stream()
+                                    .map(this::mapToDTO)
+                                    .collect(Collectors.toList())
+                    );
+                })
+                .collect(Collectors.toList());
+
+        // Obliczanie całkowitej sumy
+        BigDecimal total = categoryExpenses.stream()
+                .map(CategoryExpensesDTO::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new MonthlyCategoryExpensesResponse(month, total, categoryExpenses);
+    }
+
 
     // Mapowanie encji Transaction do DTO (dodajemy accountId)
     private TransactionDTO mapToDTO(Transaction transaction) {

@@ -1,33 +1,58 @@
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="layout">
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
 <head>
     <meta charset="UTF-8">
+    <title>Financial Overview</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <section>
-        <h1 class="text-center">Category Management</h1>
-        <h3>Add New Category</h3>
-        <form id="categoryForm" class="mb-4">
-            <div class="form-group">
-                <label for="categoryNameInput">Name of Category</label>
-                <input type="text" id="categoryNameInput" name="name" class="form-control" required />
-            </div>
-            <button type="submit" class="btn btn-success mt-4">Add New Category</button>
-        </form>
+    <h1 class="display-2 text-center mb-4">Categories</h1>
+    <section class="container mt-4">
+        <div class="row">
+            <!-- Lewa kolumna - formularz i statystyki -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="lead card-title">Monthly Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="monthForm" class="mb-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <label for="monthInput" class="form-label">Select Month:</label>
+                                    <input type="month" id="monthInput" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-primary mt-3 mt-md-0">Show Data</button>
+                                </div>
+                            </div>
+                        </form>
 
-        <table class="table table-striped">
-            <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody id="categoryTable"></tbody>
-        </table>
-        <script src="/js/categories.js"></script>
+                        <div id="monthlyData"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prawa kolumna - lista kategorii -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="lead card-title">Available Categories</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul id="categoriesList" class="list-group"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sekcja zarządzania kategoriami -->
+        <div class="mt-5">
+            <h3 class="lead">Category Management</h3>
+
+        </div>
     </section>
+
+    <script type="module" src="/js/categories.js"></script>
 </div>
 </body>
 </html>

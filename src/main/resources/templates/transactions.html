@@ -1,83 +1,94 @@
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="layout">
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
 <body>
 <section layout:fragment="content">
-    <h1 class="text-center">Transactions</h1>
-
-    <!-- Formularz dodawania transakcji -->
-    <form id="transactionForm" class="mb-4">
-        <div class="form-group">
-            <label for="date">Date</label>
-            <input type="date" id="date" name="date" class="form-control" required />
-        </div>
-        <div class="form-group">
-            <label for="amount">Amount</label>
-            <input type="number" step="0.01" id="amount" name="amount" class="form-control" required />
-        </div>
-        <div class="form-group">
-            <label for="description">Description</label>
-            <input type="text" id="description" name="description" class="form-control" required />
-        </div>
-        <!-- Typ transakcji -->
-        <div class="form-group">
-            <label>Type</label>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="transactionType" id="incomeRadio" value="INCOME" checked>
-                <label class="form-check-label" for="incomeRadio">Income</label>
+    <h1 class="text-center mb-4 display-2">Transactions</h1>
+    <div class="container">
+        <div class="row">
+            <!-- Lewa kolumna: Formularz tworzenia transakcji -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="lead">Create Transaction</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="transactionForm">
+                            <div class="mb-3">
+                                <label for="date" class="form-label">Date</label>
+                                <input type="date" id="date" name="date" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Amount</label>
+                                <input type="number" step="0.01" id="amount" name="amount" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <input type="text" id="description" name="description" class="form-control" required />
+                            </div>
+                            <!-- Typ transakcji -->
+                            <div class="mb-3">
+                                <label class="form-label">Type</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="transactionType" id="incomeRadio" value="INCOME" checked>
+                                    <label class="form-check-label" for="incomeRadio">Income</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="transactionType" id="expenseRadio" value="EXPENSE">
+                                    <label class="form-check-label" for="expenseRadio">Expense</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select id="category" name="categoryName" class="form-select" required>
+                                    <!-- Kategorie będą ładowane dynamicznie -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="account" class="form-label">Account</label>
+                                <select id="account" name="accountId" class="form-select">
+                                    <!-- Konta będą ładowane dynamicznie -->
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Transaction</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="transactionType" id="expenseRadio" value="EXPENSE">
-                <label class="form-check-label" for="expenseRadio">Expense</label>
+            <!-- Prawa kolumna: Ostatnie 5 transakcji -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="lead">Recent Transactions</h5>
+                    </div>
+                    <div class="card-body" id="recentTransactions">
+                        <!-- Ostatnie 5 transakcji zostanie wczytane dynamicznie -->
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="categoryName" class="form-control" required>
-                <!-- Kategorie będą ładowane dynamicznie -->
-            </select>
+        <!-- Lista transakcji w formie list-group -->
+        <div class="container my-4">
+            <h2 class="text-center mb-3">Transaction List</h2>
+            <div class="card">
+                <ul id="transactionList" class="list-group list-group-flush">
+                    <!-- Elementy listy będą generowane dynamicznie -->
+                </ul>
+            </div>
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <button id="prevPage" class="btn btn-secondary">Previous</button>
+                    </li>
+                    <li class="page-item">
+                        <button id="nextPage" class="btn btn-secondary">Next</button>
+                    </li>
+                </ul>
+            </nav>
         </div>
-        <button type="submit" class="btn btn-primary mt-4">Create transaction</button>
-    </form>
-
-    <!-- Saldo konta -->
-    <div class="container mt-4">
-        <h2 class="text-center">Current Account Balance</h2>
-        <div id="accountBalance" class="text-center text-danger"></div>
-    </div>
-
-    <!-- Lista transakcji -->
-    <h2 class="text-center">Transaction List</h2>
-    <table class="table table-striped">
-        <thead class="thead-dark">
-        <tr>
-            <th>ID</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Type</th>
-            <th></th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody id="transactionTable"></tbody>
-    </table>
-
-    <nav>
-        <ul class="pagination justify-content-center">
-            <li class="page-item">
-                <button id="prevPage" class="btn btn-secondary">Previous</button>
-            </li>
-            <li class="page-item">
-                <button id="nextPage" class="btn btn-secondary">Next</button>
-            </li>
-        </ul>
-    </nav>
 
 
-    <!-- Modal edycji transakcji -->
-    <div class="modal fade" id="editTransactionModal" tabindex="-1" role="dialog" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <!-- Modal edycji transakcji -->
+    <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editTransactionModalLabel">Edit Transaction</h5>
@@ -86,21 +97,21 @@
                 <div class="modal-body">
                     <form id="editTransactionForm">
                         <input type="hidden" id="editTransactionId" name="id">
-                        <div class="form-group">
-                            <label for="editDate">Date</label>
+                        <div class="mb-3">
+                            <label for="editDate" class="form-label">Date</label>
                             <input type="date" id="editDate" name="date" class="form-control" required />
                         </div>
-                        <div class="form-group">
-                            <label for="editAmount">Amount</label>
+                        <div class="mb-3">
+                            <label for="editAmount" class="form-label">Amount</label>
                             <input type="number" step="0.01" id="editAmount" name="amount" class="form-control" required />
                         </div>
-                        <div class="form-group">
-                            <label for="editDescription">Description</label>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
                             <input type="text" id="editDescription" name="description" class="form-control" required />
                         </div>
                         <!-- Typ transakcji -->
-                        <div class="form-group">
-                            <label>Type</label>
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="editTransactionType" id="editIncomeRadio" value="INCOME">
                                 <label class="form-check-label" for="editIncomeRadio">Income</label>
@@ -110,21 +121,27 @@
                                 <label class="form-check-label" for="editExpenseRadio">Expense</label>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="editCategory">Category</label>
-                            <select id="editCategory" name="categoryName" class="form-control" required>
+                        <div class="mb-3">
+                            <label for="editCategory" class="form-label">Category</label>
+                            <select id="editCategory" name="categoryName" class="form-select" required>
                                 <!-- Kategorie będą ładowane dynamicznie -->
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3">Save changes</button>
+                        <div class="mb-3">
+                            <label for="editAccount" class="form-label">Account</label>
+                            <select id="editAccount" name="accountId" class="form-select">
+                                <!-- Konta będą ładowane dynamicznie -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-<!-- Skrypt z logiką dla transakcji -->
-<script src="/js/transactions.js"></script>
+    <!-- Ładowanie skryptu z logiką dla transakcji -->
+    <script src="/js/transactions.js" type="module"></script>
 </section>
 </body>
 </html>

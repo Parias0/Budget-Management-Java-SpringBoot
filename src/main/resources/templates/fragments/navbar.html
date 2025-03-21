@@ -1,5 +1,4 @@
-<!-- fragments/navbar.html -->
-<div th:fragment="navbar" class="d-flex flex-column sidebar vh-100">
+<div th:fragment="navbar" class="d-flex flex-column sidebar min-vh-100 position-fixed top-0 start-0">
   <ul class="nav flex-column align-items-center">
     <!-- Home -->
     <li class="nav-item">
@@ -43,6 +42,11 @@
       </button>
     </li>
   </ul>
+
+  <!-- Dark Mode Toggle Button - PRZENIESIONY I DODANY mt-auto -->
+  <a id="themeToggle" href="javascript:void(0)" class="nav-link mt-auto align-self-center" data-bs-toggle="tooltip" data-bs-placement="right" title="Mode">
+    <i class="bi bi-moon-stars fs-3"></i>
+  </a>
 
   <!-- Bootstrap Tooltip Initialization -->
   <script>

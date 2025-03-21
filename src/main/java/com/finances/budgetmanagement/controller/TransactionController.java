@@ -1,11 +1,14 @@
 package com.finances.budgetmanagement.controller;
 
+import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesResponse;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.service.TransactionService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.YearMonth;
 import java.util.List;
 
 
@@ -44,5 +47,14 @@ public class TransactionController {
         transactionService.deleteTransaction(id);
         return ResponseEntity.ok("Transaction deleted");
     }
+
+    @GetMapping("/monthly-category-expenses")
+    public ResponseEntity<MonthlyCategoryExpensesResponse> getMonthlyCategoryExpenses(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
+
+        MonthlyCategoryExpensesResponse response = transactionService.getMonthlyCategoryExpenses(month);
+        return ResponseEntity.ok(response);
+    }
+
 
 }
