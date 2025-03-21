@@ -15,8 +15,9 @@ public interface AccountService {
 
     void deleteAccount(Long accountId);
 
+    Account getAccountByEntityId(Long accountId);
 
-    Account getAccountById(Long accountId);
+    AccountDTO getAccountById(Long accountId);
 
     List<AccountDTO> getAccountsByUsername(String username);
 

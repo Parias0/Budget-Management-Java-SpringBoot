@@ -15,13 +15,19 @@ async function loadAccounts() {
 // Funkcja renderująca listę kont
 function renderAccountsList(accounts) {
   const accountsContainer = document.getElementById('accounts-list');
+  if (!accountsContainer) return;
+
   accountsContainer.innerHTML = '';
 
-  // Sprawdź, czy jesteśmy na stronie home.html
   const isHomePage = document.getElementById('home-accounts-header') !== null;
 
   accounts.forEach(account => {
     const accountItem = document.createElement(isHomePage ? 'div' : 'a');
+
+    // Formatowanie kwoty
+    const balance = typeof account.balance === 'number'
+      ? account.balance.toFixed(2)
+      : parseFloat(account.balance || 0).toFixed(2);
 
     if (!isHomePage) {
       accountItem.classList.add('list-group-item-action');
@@ -32,9 +38,12 @@ function renderAccountsList(accounts) {
       });
     }
 
-    accountItem.classList.add('list-group-item');
-    accountItem.setAttribute('data-account-id', account.id);
-    accountItem.innerHTML = `${account.name} - ${account.balance} PLN`;
+    accountItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+    accountItem.innerHTML = `
+      <span>${account.name}</span>
+      <span class="badge bg-primary rounded-pill">${balance} PLN</span>
+    `;
+
     accountsContainer.appendChild(accountItem);
   });
 }
@@ -81,10 +90,16 @@ function showAlert(message, type) {
 // Zmodyfikowana funkcja openAccountModal
 async function openAccountModal(accountId) {
   try {
-    const account = await AccountsAPI.getAccountById(accountId); // Używamy API
+    const account = await AccountsAPI.getAccountById(accountId);
 
-    document.getElementById('account-name-modal').value = account.name;
-    document.getElementById('account-balance-modal').value = account.balance;
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    console.log('Received account data:', account); // Debugowanie
+
+    document.getElementById('account-name-modal').value = account.name || '';
+    document.getElementById('account-balance-modal').value = account.balance || 0;
 
     const modalButtons = document.getElementById('modal-buttons');
     modalButtons.innerHTML = `
@@ -92,43 +107,65 @@ async function openAccountModal(accountId) {
       <button type="button" class="btn btn-danger" id="delete-account-btn">Delete Account</button>
     `;
 
-    document.getElementById('save-changes-btn').addEventListener('click', () => editAccount(accountId));
-    document.getElementById('delete-account-btn').addEventListener('click', () => deleteAccount(accountId));
+    // Usuń istniejące event listeners przed dodaniem nowych
+    const cleanUpEvents = () => {
+      document.getElementById('save-changes-btn')?.removeEventListener('click', saveHandler);
+      document.getElementById('delete-account-btn')?.removeEventListener('click', deleteHandler);
+    };
+
+    const saveHandler = () => {
+      cleanUpEvents();
+      editAccount(accountId);
+    };
+
+    const deleteHandler = () => {
+      cleanUpEvents();
+      deleteAccount(accountId);
+    };
+
+    document.getElementById('save-changes-btn').addEventListener('click', saveHandler);
+    document.getElementById('delete-account-btn').addEventListener('click', deleteHandler);
 
     new bootstrap.Modal(document.getElementById('accountModal')).show();
 
   } catch (error) {
     console.error('Error opening modal:', error);
-    showAlert('Cannot load account details: ' + error.message, 'danger');
+    showAlert(`Cannot load account details: ${error.message}`, 'danger');
+
+    // Zamknij modal w przypadku błędu
+    const modal = bootstrap.Modal.getInstance(document.getElementById('accountModal'));
+    modal?.hide();
   }
 }
 
 async function editAccount(accountId) {
   try {
-    const newName = document.getElementById('account-name-modal').value;
+    const newName = document.getElementById('account-name-modal').value.trim();
     const newBalance = parseFloat(document.getElementById('account-balance-modal').value);
+
+    if (!newName) {
+      showAlert('Account name cannot be empty', 'danger');
+      return;
+    }
 
     const updatedData = {
       name: newName,
-      balance: newBalance,
+      balance: newBalance
     };
 
     const updatedAccount = await AccountsAPI.updateAccount(accountId, updatedData);
+    console.log('Updated account:', updatedAccount);
+
     showAlert('Account updated successfully', 'success');
     loadAccounts();
 
-    // Zamknięcie modala
-    bootstrap.Modal.getInstance(document.getElementById('accountModal')).hide();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('accountModal'));
+    modal.hide();
 
   } catch (error) {
     console.error('Error updating account:', error);
-    showAlert('Failed to update account: ' + error.message, 'danger');
+    showAlert(`Failed to update account: ${error.message}`, 'danger');
   }
-
-
-  // Zamknięcie modala
-  const myModal = bootstrap.Modal.getInstance(document.getElementById('accountModal'));
-  myModal.hide();
 }
 
 // Funkcja usuwająca konto

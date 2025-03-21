@@ -1,6 +1,7 @@
 package com.finances.budgetmanagement.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -26,6 +27,7 @@ public class Account {
     private User user;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("account-transactions")
     private Set<Transaction> transactions = new HashSet<>();
 
     public Account() {

@@ -5,50 +5,53 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <h1 class="display-2 text-center mb-4">Categories</h1>
+    <h1 class="text-center mb-4 display-2">Categories</h1>
     <section class="container mt-4">
         <div class="row">
-            <!-- Lewa kolumna - formularz i statystyki -->
-            <div class="col-md-8">
+            <!-- Formularz filtra -->
+            <div class="col-md-12">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h3 class="lead card-title">Monthly Summary</h3>
+                        <h3 class="card-title lead">Filters</h3>
                     </div>
                     <div class="card-body">
-                        <form id="monthForm" class="mb-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-6">
-                                    <label for="monthInput" class="form-label">Select Month:</label>
-                                    <input type="month" id="monthInput" class="form-control" required>
+                        <form id="filterForm">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="accountSelect" class="form-label">Account</label>
+                                    <select class="form-select" id="accountSelect" required>
+                                        <option value="">Loading accounts...</option>
+                                    </select>
                                 </div>
-                                <div class="col-md-6">
-                                    <button type="submit" class="btn btn-primary mt-3 mt-md-0">Show Data</button>
+                                <div class="col-md-4">
+                                    <label for="monthInput" class="form-label">Month</label>
+                                    <input type="month" class="form-control" id="monthInput" required>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">Show Data</button>
                                 </div>
                             </div>
                         </form>
-
-                        <div id="monthlyData"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Prawa kolumna - lista kategorii -->
+            <!-- Panel z danymi -->
+            <div class="col-md-8">
+                <div id="dataContainer"></div>
+            </div>
+
+            <!-- Panel z listą kategorii -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="lead card-title">Available Categories</h3>
+                        <h3 class="card-title lead">Categories Legend</h3>
                     </div>
                     <div class="card-body">
                         <ul id="categoriesList" class="list-group"></ul>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Sekcja zarządzania kategoriami -->
-        <div class="mt-5">
-            <h3 class="lead">Category Management</h3>
-
         </div>
     </section>
 

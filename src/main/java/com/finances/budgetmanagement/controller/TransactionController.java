@@ -48,11 +48,12 @@ public class TransactionController {
         return ResponseEntity.ok("Transaction deleted");
     }
 
-    @GetMapping("/monthly-category-expenses")
-    public ResponseEntity<MonthlyCategoryExpensesResponse> getMonthlyCategoryExpenses(
+    @GetMapping("/account-category-expenses")
+    public ResponseEntity<MonthlyCategoryExpensesResponse> getAccountMonthlyCategoryExpenses(
+            @RequestParam Long accountId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
 
-        MonthlyCategoryExpensesResponse response = transactionService.getMonthlyCategoryExpenses(month);
+        MonthlyCategoryExpensesResponse response = transactionService.getAccountMonthlyCategoryExpenses(accountId, month);
         return ResponseEntity.ok(response);
     }
 

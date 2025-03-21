@@ -129,8 +129,8 @@ function renderTransactions() {
         <div class="text-end">
           <span class="badge bg-secondary mb-2">${accountName}</span>
           <div>
-            <button class="btn btn-sm btn-info" onclick="openEditModal(${tx.id})">Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteTransaction(${tx.id})">Delete</button>
+            <button class="btn btn-sm btn-primary" onclick="openEditModal(${tx.id})">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${tx.id})">Delete</button>
           </div>
         </div>
       </div>

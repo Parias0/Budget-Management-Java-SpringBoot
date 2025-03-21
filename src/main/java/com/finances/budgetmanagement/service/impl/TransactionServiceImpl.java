@@ -44,7 +44,7 @@ public class TransactionServiceImpl implements TransactionService {
             Account account;
             // Jeśli DTO zawiera accountId, pobieramy konto po tym ID i weryfikujemy własność
             if (transactionDTO.getAccountId() != null) {
-                account = accountService.getAccountById(transactionDTO.getAccountId());
+                account = accountService.getAccountByEntityId(transactionDTO.getAccountId());
                 if (!account.getUser().getUsername().equals(username)) {
                     throw new RuntimeException("Account does not belong to the current user");
                 }
@@ -96,7 +96,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (accountChanged) {
             // Pobranie nowego konta
-            newAccount = accountService.getAccountById(transactionDTO.getAccountId());
+            newAccount = accountService.getAccountByEntityId(transactionDTO.getAccountId());
             if (!newAccount.getUser().getUsername().equals(username)) {
                 throw new RuntimeException("New account does not belong to the current user");
             }
@@ -172,13 +172,20 @@ public class TransactionServiceImpl implements TransactionService {
                 .collect(Collectors.toList());
     }
 
-    public MonthlyCategoryExpensesResponse getMonthlyCategoryExpenses(YearMonth month) {
+    @Override
+    public MonthlyCategoryExpensesResponse getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month) {
+        Account account = accountService.getAccountByEntityId(accountId);
         String username = SecurityUtil.getCurrentUsername();
+
+        if (!account.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Account does not belong to the current user");
+        }
+
         LocalDate startDate = month.atDay(1);
         LocalDate endDate = month.atEndOfMonth();
 
-        List<Transaction> expenses = transactionRepository.findByAccountUserUsernameAndTransactionTypeAndDateBetween(
-                username,
+        List<Transaction> expenses = transactionRepository.findByAccountIdAndTransactionTypeAndDateBetween(
+                accountId,
                 TransactionType.EXPENSE,
                 startDate,
                 endDate

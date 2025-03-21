@@ -1,6 +1,7 @@
 package com.finances.budgetmanagement.service.impl;
 
 import com.finances.budgetmanagement.dto.AccountDTO;
+import com.finances.budgetmanagement.dto.TransactionSummaryDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.entity.User;
@@ -66,9 +67,17 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccountById(Long accountId) {
+    public Account getAccountByEntityId(Long accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found with ID: " + accountId));
+    }
+
+    @Override
+    public AccountDTO getAccountById(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found with ID: " + accountId));
+
+        return convertToDTO(account);
     }
 
     @Override
@@ -105,6 +114,31 @@ public class AccountServiceImpl implements AccountService {
 
 
     private AccountDTO convertToDTO(Account account) {
-        return new AccountDTO(account.getId(), account.getBalance(), account.getName());
+        AccountDTO dto = new AccountDTO();
+        dto.setId(account.getId());
+        dto.setName(account.getName());
+        dto.setBalance(account.getBalance());
+
+        if(account.getTransactions() != null) {
+            dto.setTransactions(account.getTransactions().stream()
+                    .map(this::convertTransactionToSummaryDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        return dto;
+    }
+
+    private TransactionSummaryDTO convertTransactionToSummaryDTO(Transaction transaction) {
+        TransactionSummaryDTO dto = new TransactionSummaryDTO();
+        dto.setId(transaction.getId());
+        dto.setDate(transaction.getDate());
+        dto.setAmount(transaction.getAmount());
+        dto.setDescription(transaction.getDescription());
+
+        if(transaction.getCategory() != null) {
+            dto.setCategoryName(transaction.getCategory().getName());
+        }
+
+        return dto;
     }
 }

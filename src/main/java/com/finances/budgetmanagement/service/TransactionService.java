@@ -16,5 +16,5 @@ public interface TransactionService {
 
     List<TransactionDTO> getAllTransactions();
 
-    MonthlyCategoryExpensesResponse getMonthlyCategoryExpenses(YearMonth month);
+    MonthlyCategoryExpensesResponse getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month);
 }

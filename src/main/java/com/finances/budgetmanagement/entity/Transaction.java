@@ -1,5 +1,6 @@
 package com.finances.budgetmanagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.finances.budgetmanagement.enums.TransactionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
@@ -35,8 +36,9 @@ public class Transaction {
     @NotNull(message = "Transaction type is required")
     private TransactionType transactionType;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
+    @JsonBackReference("account-transactions")
     private Account account;
 
     public Transaction() {
