@@ -1,7 +1,8 @@
 package com.finances.budgetmanagement.service.impl;
 
+import com.finances.budgetmanagement.dto.CategoryExpenseSummaryDTO;
 import com.finances.budgetmanagement.dto.CategoryExpensesDTO;
-import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesResponse;
+import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.Category;
@@ -9,13 +10,14 @@ import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.exception.CategoryNotFoundException;
 import com.finances.budgetmanagement.exception.TransactionNotFoundException;
+import com.finances.budgetmanagement.mapper.TransactionMapper;
+import com.finances.budgetmanagement.repository.AccountRepository;
 import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.service.TransactionService;
 import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -28,47 +30,51 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
+    private final AccountRepository accountRepository;
     private final AccountService accountService;
+    private final TransactionMapper transactionMapper;
 
-    public TransactionServiceImpl(TransactionRepository transactionRepository, CategoryRepository categoryRepository, AccountService accountService) {
+    public TransactionServiceImpl(TransactionRepository transactionRepository,
+                                  CategoryRepository categoryRepository,
+                                  AccountRepository accountRepository,
+                                  AccountService accountService,
+                                  TransactionMapper transactionMapper) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
+        this.accountRepository = accountRepository;
         this.accountService = accountService;
+        this.transactionMapper = transactionMapper;
     }
 
     @Override
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
-        try {
-            String username = SecurityUtil.getCurrentUsername();
+        String username = SecurityUtil.getCurrentUsername();
+        Account account;
 
-            Account account;
-            // Jeśli DTO zawiera accountId, pobieramy konto po tym ID i weryfikujemy własność
-            if (transactionDTO.getAccountId() != null) {
-                account = accountService.getAccountByEntityId(transactionDTO.getAccountId());
-                if (!account.getUser().getUsername().equals(username)) {
-                    throw new RuntimeException("Account does not belong to the current user");
-                }
-            } else {
-                // W przeciwnym wypadku pobieramy domyślne konto użytkownika
-                account = accountService.getAccountEntityByUsername(username);
+        if (transactionDTO.getAccountId() != null) {
+            account = accountRepository.findById(transactionDTO.getAccountId())
+                    .orElseThrow(() -> new RuntimeException("Account not found with id: " + transactionDTO.getAccountId()));
+            if (!account.getUser().getUsername().equals(username)) {
+                throw new RuntimeException("Account does not belong to the current user");
             }
-
-            // Mapowanie DTO do encji
-            Transaction transaction = mapToEntity(transactionDTO);
-            transaction.setAccount(account);
-
-            // Zapisanie transakcji
-            Transaction savedTransaction = transactionRepository.save(transaction);
-
-            // Aktualizacja salda po transakcji (dodajemy kwotę)
-            accountService.adjustBalance(account, savedTransaction, true);
-
-            TransactionDTO resultDTO = mapToDTO(savedTransaction);
-            resultDTO.setAccountId(account.getId());
-            return resultDTO;
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating transaction: " + e.getMessage(), e);
+        } else {
+            // Pobieramy pierwsze konto użytkownika – można zmodyfikować logikę wyboru domyślnego konta
+            account = accountRepository.findAllByUserUsername(username).stream()
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Default account not found for user: " + username));
         }
+
+        Transaction transaction = transactionMapper.transactionDTOToTransaction(transactionDTO);
+        transaction.setAccount(account);
+
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // Aktualizacja salda – wykorzystujemy metodę adjustBalance z AccountService, która operuje na DTO
+        accountService.adjustBalance(account.getId(), transactionDTO, true);
+
+        TransactionDTO resultDTO = transactionMapper.transactionToTransactionDTO(savedTransaction);
+        resultDTO.setAccountId(account.getId());
+        return resultDTO;
     }
 
     @Override
@@ -77,26 +83,23 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
         String username = SecurityUtil.getCurrentUsername();
-
-
         Account oldAccount = transaction.getAccount();
         if (!oldAccount.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Transaction account does not belong to the current user");
         }
 
-        Account newAccount = oldAccount;
         boolean accountChanged = transactionDTO.getAccountId() != null && !oldAccount.getId().equals(transactionDTO.getAccountId());
-
         TransactionType oldType = transaction.getTransactionType();
-        TransactionType newType = TransactionType.valueOf(transactionDTO.getTransactionType());
+        TransactionType newType = transactionDTO.getTransactionType();
         boolean typeChanged = !oldType.equals(newType);
 
         // Cofnięcie wpływu starej transakcji
-        accountService.adjustBalance(oldAccount, transaction, false);
+        accountService.adjustBalance(oldAccount.getId(), transactionMapper.transactionToTransactionDTO(transaction), false);
 
+        Account newAccount = oldAccount;
         if (accountChanged) {
-            // Pobranie nowego konta
-            newAccount = accountService.getAccountByEntityId(transactionDTO.getAccountId());
+            newAccount = accountRepository.findById(transactionDTO.getAccountId())
+                    .orElseThrow(() -> new RuntimeException("Account not found with id: " + transactionDTO.getAccountId()));
             if (!newAccount.getUser().getUsername().equals(username)) {
                 throw new RuntimeException("New account does not belong to the current user");
             }
@@ -118,63 +121,45 @@ public class TransactionServiceImpl implements TransactionService {
         }
         transaction.setCategory(category);
 
-        // Zapisanie zmian
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
         // Zastosowanie wpływu nowej transakcji
-        accountService.adjustBalance(newAccount, updatedTransaction, true);
+        accountService.adjustBalance(newAccount.getId(), transactionMapper.transactionToTransactionDTO(updatedTransaction), true);
 
-        // Zwrot DTO
-        TransactionDTO resultDTO = mapToDTO(updatedTransaction);
-        resultDTO.setAccountId(transaction.getAccount().getId());
+        TransactionDTO resultDTO = transactionMapper.transactionToTransactionDTO(updatedTransaction);
+        resultDTO.setAccountId(newAccount.getId());
         return resultDTO;
     }
 
-
-
-
     @Override
     public void deleteTransaction(Long id) {
-        try {
-            // Pobieramy transakcję do usunięcia
-            Transaction transaction = transactionRepository.findById(id)
-                    .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-            String username = SecurityUtil.getCurrentUsername();
-
-            Account account = transaction.getAccount();
-
-            // Sprawdzenie, czy użytkownik ma dostęp do konta, do którego przypisana jest transakcja
-            if (!account.getUser().getUsername().equals(username)) {
-                throw new RuntimeException("Transaction does not belong to the current user");
-            }
-
-            // Cofamy wpływ transakcji przed jej usunięciem
-            accountService.adjustBalance(account,transaction, false);
-
-            // Usuwamy transakcję
-            transactionRepository.deleteById(id);
-        } catch (TransactionNotFoundException ex) {
-            throw ex;
-        } catch (Exception e) {
-            throw new RuntimeException("Error deleting transaction: " + e.getMessage(), e);
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = transaction.getAccount();
+        if (!account.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Transaction does not belong to the current user");
         }
+
+        // Cofamy wpływ transakcji przed usunięciem
+        accountService.adjustBalance(account.getId(), transactionMapper.transactionToTransactionDTO(transaction), false);
+        transactionRepository.deleteById(id);
     }
 
     @Override
     public List<TransactionDTO> getAllTransactions() {
-        // Pobieramy transakcje zalogowanego użytkownika
         String username = SecurityUtil.getCurrentUsername();
-
         return transactionRepository.findByAccountUserUsername(username)
                 .stream()
-                .map(this::mapToDTO)
+                .map(transactionMapper::transactionToTransactionDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public MonthlyCategoryExpensesResponse getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month) {
-        Account account = accountService.getAccountByEntityId(accountId);
+    public MonthlyCategoryExpensesDTO getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
         String username = SecurityUtil.getCurrentUsername();
 
         if (!account.getUser().getUsername().equals(username)) {
@@ -200,59 +185,40 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(entry -> {
                     Category category = entry.getKey();
                     List<Transaction> categoryTransactions = entry.getValue();
-
                     BigDecimal categoryTotal = categoryTransactions.stream()
                             .map(Transaction::getAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                    return new CategoryExpensesDTO(
-                            category.getName(),
-                            categoryTotal,
-                            categoryTransactions.stream()
-                                    .map(this::mapToDTO)
-                                    .collect(Collectors.toList())
-                    );
+                    List<TransactionDTO> transactionsDTO = categoryTransactions.stream()
+                            .map(transactionMapper::transactionToTransactionDTO)
+                            .collect(Collectors.toList());
+                    return new CategoryExpensesDTO(category.getName(), categoryTotal, transactionsDTO);
                 })
                 .collect(Collectors.toList());
 
-        // Obliczanie całkowitej sumy
         BigDecimal total = categoryExpenses.stream()
                 .map(CategoryExpensesDTO::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new MonthlyCategoryExpensesResponse(month, total, categoryExpenses);
+        return new MonthlyCategoryExpensesDTO(month, total, categoryExpenses);
     }
 
+    public List<CategoryExpenseSummaryDTO> getCategoryExpensesForAllAccounts(YearMonth month) {
+        // Pobieramy transakcje wydatków z bazy dla wszystkich kont w danym miesiącu
+        List<Transaction> expenses = transactionRepository.findByTransactionTypeAndDateBetween(
+                TransactionType.EXPENSE, month.atDay(1), month.atEndOfMonth()
+        );
 
-    // Mapowanie encji Transaction do DTO (dodajemy accountId)
-    private TransactionDTO mapToDTO(Transaction transaction) {
-        TransactionDTO dto = new TransactionDTO();
-        dto.setId(transaction.getId());
-        dto.setDate(transaction.getDate());
-        dto.setAmount(transaction.getAmount());
-        dto.setDescription(transaction.getDescription());
-        dto.setCategoryName(transaction.getCategory().getName());
-        dto.setTransactionType(transaction.getTransactionType().toString());
-        dto.setAccountId(transaction.getAccount().getId());
-        return dto;
+        // Grupowanie po kategoriach, sumowanie wydatków
+        Map<String, BigDecimal> categoryTotals = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        t -> t.getCategory().getName(),
+                        Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
+                ));
+
+        // Przekształcamy dane na DTO
+        return categoryTotals.entrySet().stream()
+                .map(entry -> new CategoryExpenseSummaryDTO(entry.getKey(), null, entry.getValue()))
+                .collect(Collectors.toList());
     }
-
-    // Mapowanie DTO do encji Transaction
-    private Transaction mapToEntity(TransactionDTO dto) {
-        Transaction transaction = new Transaction();
-        transaction.setDate(dto.getDate());
-        transaction.setAmount(dto.getAmount());
-        transaction.setDescription(dto.getDescription());
-
-        Category category = categoryRepository.findByName(dto.getCategoryName());
-        if (category == null) {
-            throw new RuntimeException("Category not found: " + dto.getCategoryName());
-        }
-        transaction.setCategory(category);
-        transaction.setTransactionType(TransactionType.valueOf(dto.getTransactionType()));
-        return transaction;
-    }
-
-
 
 }

@@ -1,4 +1,4 @@
-import { TransactionsAPI, CategoriesAPI, AccountsAPI } from './api.js'; // Upewnij się, że importujesz AccountsAPI
+import { TransactionsAPI, CategoriesAPI, AccountsAPI } from './api.js';
 
 let transactions = [];
 let accountsList = [];
@@ -89,10 +89,17 @@ function setupFormSubmit() {
 // Pobieranie transakcji i renderowanie ich
 async function loadTransactions() {
   try {
-    transactions = await TransactionsAPI.getAllTransactions();
-    renderRecentTransactions();
+    const fetchedTransactions = await TransactionsAPI.getAllTransactions();
 
-    // Sprawdź, czy jesteśmy na stronie transactions.html, zanim uruchomisz renderowanie pełnej listy
+    // Zachowujemy oryginalną kolejność transakcji
+    const originalTransactions = [...fetchedTransactions];
+
+    // Sortujemy kopię do głównej listy
+    transactions = fetchedTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Renderujemy recent transactions z oryginalnej kolejności
+    renderRecentTransactions(originalTransactions);
+
     if (document.getElementById('transactionList')) {
       renderTransactions();
     }
@@ -101,30 +108,41 @@ async function loadTransactions() {
   }
 }
 
+
+
+
 // Renderowanie transakcji jako elementów list-group
 function renderTransactions() {
   const transactionList = document.getElementById('transactionList');
   transactionList.innerHTML = '';
 
+  // Filtrowanie transakcji po dacie, jeśli użytkownik wybrał filtr
+  let filteredTransactions = transactions;
+  const dateFilterInput = document.getElementById('dateFilter');
+  if (dateFilterInput && dateFilterInput.value) {
+    const selectedDate = new Date(dateFilterInput.value);
+    // Filtrujemy transakcje, które mają tę samą datę (możesz zmodyfikować logikę, np. na zakres)
+    filteredTransactions = transactions.filter(tx => {
+      const txDate = new Date(tx.date);
+      return txDate.toDateString() === selectedDate.toDateString();
+    });
+  }
+
   const startIndex = (currentPage - 1) * pageSize;
-  const paginatedItems = transactions.slice(startIndex, startIndex + pageSize);
+  const paginatedItems = filteredTransactions.slice(startIndex, startIndex + pageSize);
 
   paginatedItems.forEach(tx => {
-    // Wyszukiwanie konta dla transakcji
     const account = accountsList.find(acc => acc.id == tx.accountId);
     const accountName = account ? account.name : 'Default account';
 
-    // Utworzenie elementu listy dla transakcji
     const li = document.createElement('li');
     li.className = 'list-group-item';
-
-    // Możesz użyć struktury kart wewnątrz elementu listy
     li.innerHTML = `
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <h6 class="mb-1">${tx.transactionType} - ${tx.amount}</h6>
+          <h6 class="mb-1">${tx.transactionType} - ${tx.amount} PLN</h6>
           <p class="mb-1">${tx.description}</p>
-          <small class="text-muted">${tx.date} | ${tx.categoryName}</small>
+          <small class="text-muted">${new Date(tx.date).toLocaleDateString('pl-PL')} | ${tx.categoryName}</small>
         </div>
         <div class="text-end">
           <span class="badge bg-secondary mb-2">${accountName}</span>
@@ -135,20 +153,21 @@ function renderTransactions() {
         </div>
       </div>
     `;
-
     transactionList.appendChild(li);
   });
 }
 
 
+
 // Renderowanie ostatnich 5 transakcji w karcie po prawej
-function renderRecentTransactions() {
+function renderRecentTransactions(transactionsList) {
   const recentContainer = document.getElementById('recentTransactions');
   if (!recentContainer) return;
   recentContainer.innerHTML = '';
-  const recent = transactions.slice(-5).reverse(); // najnowsze na górze
+
+  // Pobieramy 5 ostatnich transakcji wg oryginalnej kolejności i odwracamy ich kolejność
+  const recent = transactionsList.slice(-5).reverse();
   recent.forEach(tx => {
-    // Wyszukiwanie konta dla transakcji
     const account = accountsList.find(acc => acc.id == tx.accountId);
     const accountName = account ? account.name : 'Default account';
 
@@ -157,16 +176,17 @@ function renderRecentTransactions() {
     card.innerHTML = `
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
-          <h6 class="card-title mb-0">${tx.transactionType} - ${tx.amount} 'PLN'</h6>
+          <h6 class="card-title mb-0">${tx.transactionType} - ${tx.amount} PLN</h6>
           <span class="badge bg-secondary">${accountName}</span>
         </div>
         <p class="card-text mt-2">${tx.description}</p>
-        <small class="text-muted">${tx.date}</small>
+        <small class="text-muted">${new Date(tx.date).toLocaleDateString('pl-PL')}</small>
       </div>
     `;
     recentContainer.appendChild(card);
   });
 }
+
 
 
 

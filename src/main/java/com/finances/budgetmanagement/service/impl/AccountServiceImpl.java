@@ -1,18 +1,24 @@
 package com.finances.budgetmanagement.service.impl;
 
 import com.finances.budgetmanagement.dto.AccountDTO;
-import com.finances.budgetmanagement.dto.TransactionSummaryDTO;
+import com.finances.budgetmanagement.dto.AccountSummaryDTO;
+import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.dto.TransactionSummary;
 import com.finances.budgetmanagement.entity.Account;
-import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.entity.User;
 import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.repository.AccountRepository;
+import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.service.AccountService;
+import com.finances.budgetmanagement.mapper.AccountMapper;
 import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,33 +26,38 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final AccountMapper accountMapper;
+    private final TransactionRepository transactionRepository;
 
-    public AccountServiceImpl(AccountRepository accountRepository, UserRepository userRepository) {
+    public AccountServiceImpl(AccountRepository accountRepository, UserRepository userRepository, AccountMapper accountMapper, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
+        this.accountMapper = accountMapper;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
     public List<AccountDTO> getAllUserAccounts() {
         String username = SecurityUtil.getCurrentUsername();
-        return getAccountsByUsername(username);
+        return accountRepository.findAllByUserUsername(username).stream()
+                .map(accountMapper::accountToAccountDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public AccountDTO createAccount(AccountDTO accountDTO) {
-
         String username = SecurityUtil.getCurrentUsername();
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
-        Account account = new Account();
-        account.setName(accountDTO.getName());
-        // Jeżeli saldo nie zostało ustawione, ustawiamy domyślnie ZERO
-        account.setBalance(accountDTO.getBalance() != null ? accountDTO.getBalance() : BigDecimal.ZERO);
+        Account account = accountMapper.accountDTOToAccount(accountDTO);
+        if (account.getBalance() == null) {
+            account.setBalance(BigDecimal.ZERO);
+        }
         account.setUser(user);
+
         Account saved = accountRepository.save(account);
-        return convertToDTO(saved);
+        return accountMapper.accountToAccountDTO(saved);
     }
 
     @Override
@@ -56,7 +67,7 @@ public class AccountServiceImpl implements AccountService {
         account.setName(accountDTO.getName());
         account.setBalance(accountDTO.getBalance());
         Account updated = accountRepository.save(account);
-        return convertToDTO(updated);
+        return accountMapper.accountToAccountDTO(updated);
     }
 
     @Override
@@ -67,78 +78,52 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccountByEntityId(Long accountId) {
-        return accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with ID: " + accountId));
-    }
-
-    @Override
     public AccountDTO getAccountById(Long accountId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found with ID: " + accountId));
-
-        return convertToDTO(account);
+        return accountMapper.accountToAccountDTO(account);
     }
 
+    // Przykładowa metoda adjustBalance operująca na DTO – przyjmuje identyfikator konta i flagę,
+    // a przykładowo modyfikuje saldo. W praktyce możesz rozszerzyć tę metodę o przekazywanie danych transakcji.
     @Override
-    public List<AccountDTO> getAccountsByUsername(String username) {
-        List<Account> accounts = accountRepository.findAllByUser_Username(username);
-        if (accounts.isEmpty()) {
-            throw new RuntimeException("No accounts found for username: " + username);
-        }
-        return accounts.stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
+    public AccountDTO adjustBalance(Long accountId, TransactionDTO transactionDTO, boolean isAdding) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found with ID: " + accountId));
 
-
-    @Override
-    public Account getAccountEntityByUsername(String username) {
-        return accountRepository.findByUser_Username(username)
-                .orElseThrow(() -> new RuntimeException("Account not found for username: " + username));
-    }
-
-
-    @Override
-    public void adjustBalance(Account account, Transaction transaction, boolean isAdding) {
-        if (account == null) {
-            throw new RuntimeException("Transaction is not associated with any account.");
-        }
-
-        BigDecimal amount = transaction.getAmount();
-        BigDecimal newBalance = transaction.getTransactionType() == TransactionType.INCOME
+        // Jeśli posiadasz TransactionDTO, możesz zmapować go na Transaction lub operować bezpośrednio na danych z DTO.
+        BigDecimal amount = transactionDTO.getAmount();
+        BigDecimal newBalance = transactionDTO.getTransactionType() == TransactionType.INCOME
                 ? account.getBalance().add(isAdding ? amount : amount.negate())
                 : account.getBalance().subtract(isAdding ? amount : amount.negate());
 
         account.setBalance(newBalance);
-        accountRepository.save(account);
+        Account updated = accountRepository.save(account);
+        return accountMapper.accountToAccountDTO(updated);
     }
 
+    public List<AccountSummaryDTO> getAllAccountsSummary(YearMonth month) {
+        LocalDate startDate = month.atDay(1);
+        LocalDate endDate = month.atEndOfMonth();
 
-    private AccountDTO convertToDTO(Account account) {
-        AccountDTO dto = new AccountDTO();
-        dto.setId(account.getId());
-        dto.setName(account.getName());
-        dto.setBalance(account.getBalance());
+        return accountRepository.findAll().stream()
+                .map(account -> {
+                    Map<TransactionType, BigDecimal> summary = transactionRepository
+                            .getMonthlySummary(account.getId(), startDate, endDate)
+                            .stream()
+                            .collect(Collectors.toMap(
+                                    TransactionSummary::transactionType,
+                                    TransactionSummary::total
+                            ));
 
-        if(account.getTransactions() != null) {
-            dto.setTransactions(account.getTransactions().stream()
-                    .map(this::convertTransactionToSummaryDTO)
-                    .collect(Collectors.toList()));
-        }
-
-        return dto;
+                    return new AccountSummaryDTO(
+                            account.getId(),
+                            account.getName(),
+                            summary.getOrDefault(TransactionType.INCOME, BigDecimal.ZERO),
+                            summary.getOrDefault(TransactionType.EXPENSE, BigDecimal.ZERO)
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
-    private TransactionSummaryDTO convertTransactionToSummaryDTO(Transaction transaction) {
-        TransactionSummaryDTO dto = new TransactionSummaryDTO();
-        dto.setId(transaction.getId());
-        dto.setDate(transaction.getDate());
-        dto.setAmount(transaction.getAmount());
-        dto.setDescription(transaction.getDescription());
-
-        if(transaction.getCategory() != null) {
-            dto.setCategoryName(transaction.getCategory().getName());
-        }
-
-        return dto;
-    }
 }

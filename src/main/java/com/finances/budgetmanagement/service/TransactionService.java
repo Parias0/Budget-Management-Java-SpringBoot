@@ -1,6 +1,7 @@
 package com.finances.budgetmanagement.service;
 
-import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesResponse;
+import com.finances.budgetmanagement.dto.CategoryExpenseSummaryDTO;
+import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 
 import java.time.YearMonth;
@@ -16,5 +17,7 @@ public interface TransactionService {
 
     List<TransactionDTO> getAllTransactions();
 
-    MonthlyCategoryExpensesResponse getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month);
+    MonthlyCategoryExpensesDTO getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month);
+
+    List<CategoryExpenseSummaryDTO> getCategoryExpensesForAllAccounts(YearMonth month);
 }

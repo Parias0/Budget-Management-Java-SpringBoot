@@ -1,6 +1,7 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesResponse;
+import com.finances.budgetmanagement.dto.CategoryExpenseSummaryDTO;
+import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
 import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -49,13 +50,21 @@ public class TransactionController {
     }
 
     @GetMapping("/account-category-expenses")
-    public ResponseEntity<MonthlyCategoryExpensesResponse> getAccountMonthlyCategoryExpenses(
+    public ResponseEntity<MonthlyCategoryExpensesDTO> getAccountMonthlyCategoryExpenses(
             @RequestParam Long accountId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
 
-        MonthlyCategoryExpensesResponse response = transactionService.getAccountMonthlyCategoryExpenses(accountId, month);
+        MonthlyCategoryExpensesDTO response = transactionService.getAccountMonthlyCategoryExpenses(accountId, month);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/category-expenses-summary")
+    public ResponseEntity<List<CategoryExpenseSummaryDTO>> getCategoryExpensesSummary(@RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
+        List<CategoryExpenseSummaryDTO> response = transactionService.getCategoryExpensesForAllAccounts(month);
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
 }

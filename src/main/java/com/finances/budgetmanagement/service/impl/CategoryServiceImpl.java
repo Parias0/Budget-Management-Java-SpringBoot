@@ -3,6 +3,7 @@ package com.finances.budgetmanagement.service.impl;
 import com.finances.budgetmanagement.dto.CategoryDTO;
 import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.exception.CategoryNotFoundException;
+import com.finances.budgetmanagement.mapper.CategoryMapper;
 import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.service.CategoryService;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,11 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper) {
         this.categoryRepository = categoryRepository;
+        this.categoryMapper = categoryMapper;
     }
 
     @Override
@@ -25,16 +28,16 @@ public class CategoryServiceImpl implements CategoryService {
             throw new RuntimeException("Kategoria już istnieje!");
         }
 
-        Category category = mapToEntity(categoryDTO);
+        Category category = categoryMapper.categoryDTOToCategory(categoryDTO);
         category = categoryRepository.save(category);
-        return mapToDTO(category);
+        return categoryMapper.categoryToCategoryDTO(category);
     }
 
     @Override
     public List<CategoryDTO> getAllCategories() {
         return categoryRepository.findAll()
                 .stream()
-                .map(this::mapToDTO)
+                .map(categoryMapper::categoryToCategoryDTO)
                 .collect(Collectors.toList());
     }
 
@@ -51,28 +54,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + id));
 
-            Category category = categoryRepository.findById(id)
-                    .orElseThrow(() -> new CategoryNotFoundException("Category not fount with id: " + id));
-
-            category.setName(categoryDTO.getName());
-
-            Category updatedCategory = categoryRepository.save(category);
-
-            return mapToDTO(updatedCategory);
-    }
-
-
-    private CategoryDTO mapToDTO(Category category) {
-        CategoryDTO dto = new CategoryDTO();
-        dto.setId(category.getId());
-        dto.setName(category.getName());
-        return dto;
-    }
-
-    private Category mapToEntity(CategoryDTO dto) {
-        Category category = new Category();
-        category.setName(dto.getName());
-        return category;
+        category.setName(categoryDTO.getName());
+        Category updatedCategory = categoryRepository.save(category);
+        return categoryMapper.categoryToCategoryDTO(updatedCategory);
     }
 }

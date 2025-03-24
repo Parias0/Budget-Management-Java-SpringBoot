@@ -1,28 +1,26 @@
 package com.finances.budgetmanagement.service;
 
 import com.finances.budgetmanagement.dto.AccountDTO;
-import com.finances.budgetmanagement.entity.Account;
-import com.finances.budgetmanagement.entity.Transaction;
+import com.finances.budgetmanagement.dto.AccountSummaryDTO;
+import com.finances.budgetmanagement.dto.TransactionDTO;
+
+import java.time.YearMonth;
 import java.util.List;
 
 public interface AccountService {
 
+    // CRUD
     List<AccountDTO> getAllUserAccounts();
-
     AccountDTO createAccount(AccountDTO accountDTO);
-
     AccountDTO updateAccount(AccountDTO accountDTO);
-
     void deleteAccount(Long accountId);
 
-    Account getAccountByEntityId(Long accountId);
-
+    //DTO
     AccountDTO getAccountById(Long accountId);
 
-    List<AccountDTO> getAccountsByUsername(String username);
 
-    Account getAccountEntityByUsername(String username);
-
-    void adjustBalance(Account account, Transaction transaction, boolean isAdding);
+    //business operations
+    AccountDTO adjustBalance(Long accountId, TransactionDTO transactionDTO, boolean isAdding);
+    List<AccountSummaryDTO> getAllAccountsSummary(YearMonth month);
 
 }

@@ -1,5 +1,7 @@
 package com.finances.budgetmanagement.dto;
 
+import com.finances.budgetmanagement.enums.TransactionType;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -10,14 +12,14 @@ public class TransactionDTO {
     private BigDecimal amount;
     private String description;
     private String categoryName;
-    private String transactionType;
+    private TransactionType transactionType;
     private Long accountId;
 
 
     public TransactionDTO() {
     }
 
-    public TransactionDTO(Long id, LocalDate date, BigDecimal amount, String description, String categoryName, String transactionType, Long accountId) {
+    public TransactionDTO(Long id, LocalDate date, BigDecimal amount, String description, String categoryName, TransactionType transactionType, Long accountId) {
         this.id = id;
         this.date = date;
         this.amount = amount;
@@ -35,11 +37,11 @@ public class TransactionDTO {
         this.accountId = accountId;
     }
 
-    public String getTransactionType() {
+    public TransactionType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(String transactionType) {
+    public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
     }
 

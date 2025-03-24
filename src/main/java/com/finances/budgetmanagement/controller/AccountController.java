@@ -1,11 +1,14 @@
 package com.finances.budgetmanagement.controller;
 
 import com.finances.budgetmanagement.dto.AccountDTO;
-import com.finances.budgetmanagement.entity.Account;
+import com.finances.budgetmanagement.dto.AccountSummaryDTO;
 import com.finances.budgetmanagement.service.AccountService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.YearMonth;
 import java.util.List;
 
 @RestController
@@ -50,5 +53,12 @@ public class AccountController {
     public ResponseEntity<String> deleteAccount(@PathVariable Long accountId) {
         accountService.deleteAccount(accountId);
         return ResponseEntity.ok("Account deleted");
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<List<AccountSummaryDTO>> getAllAccountsSummary(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
+    ) {
+        return ResponseEntity.ok(accountService.getAllAccountsSummary(month));
     }
 }
