@@ -21,6 +21,5 @@ public interface AccountService {
 
     //business operations
     AccountDTO adjustBalance(Long accountId, TransactionDTO transactionDTO, boolean isAdding);
-    List<AccountSummaryDTO> getAllAccountsSummary(YearMonth month);
 
 }

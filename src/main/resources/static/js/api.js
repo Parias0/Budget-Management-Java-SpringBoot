@@ -73,7 +73,6 @@ const AccountsAPI = {
   createAccount: (accountData) => apiPost('/accounts', accountData),
   updateAccount: (accountId, accountData) => apiPut(`/accounts/${accountId}`, accountData),
   deleteAccount: (accountId) => apiDelete(`/accounts/${accountId}`),
-  getAllAccountsSummary: (month) => apiGet(`/accounts/summary?month=${month}`),
 };
 
 // API for categories
@@ -90,9 +89,8 @@ const TransactionsAPI = {
   createTransaction: (transactionData) => apiPost('/transactions', transactionData),
   updateTransaction: (transactionId, transactionData) => apiPut(`/transactions/${transactionId}`, transactionData),
   deleteTransaction: (transactionId) => apiDelete(`/transactions/${transactionId}`),
-  getAccountCategoryData: (accountId, month) =>
-          apiGet(`/transactions/account-category-expenses?accountId=${accountId}&month=${month}`),
-  getCategoryExpensesSummary: (month) => apiGet(`/transactions/category-expenses-summary?month=${month}`),
+  getFilteredTransactions: (params) =>
+  apiGet('/transactions/filter?' + new URLSearchParams(params).toString()),
 };
 
 // Auth API
@@ -102,7 +100,15 @@ const AuthAPI = {
   logout: () => apiPost('/auth/logout'),
 };
 
+// API for transactions
+const SummaryAPI = {
+  getAllAccountsSummary: (month) => apiGet(`/summary/account-summary?month=${month}`),
+  getAccountCategoryData: (accountId, month) =>
+  apiGet(`/summary/account-category-expenses?accountId=${accountId}&month=${month}`),
+  getCategoryExpensesSummary: (month) => apiGet(`/summary/category-expenses-summary?month=${month}`),
+};
 
 
 
-export { AccountsAPI, CategoriesAPI, TransactionsAPI, AuthAPI };
+
+export { AccountsAPI, CategoriesAPI, TransactionsAPI, AuthAPI, SummaryAPI };

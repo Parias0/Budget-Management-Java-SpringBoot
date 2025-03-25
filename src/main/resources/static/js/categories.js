@@ -1,4 +1,4 @@
-import { AccountsAPI, CategoriesAPI, TransactionsAPI } from './api.js';
+import { AccountsAPI, CategoriesAPI, SummaryAPI } from './api.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
@@ -64,7 +64,7 @@ function setupFilterForm() {
         showLoading();
 
         try {
-            const data = await TransactionsAPI.getAccountCategoryData(accountId, month);
+            const data = await SummaryAPI.getAccountCategoryData(accountId, month);
             renderData(data);
         } catch (error) {
             console.error("Error loading data:", error);

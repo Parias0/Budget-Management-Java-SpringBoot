@@ -1,4 +1,4 @@
-import { AccountsAPI } from './api.js';
+import { SummaryAPI } from './api.js';
 
 console.log('Plik statsCarousel.js został załadowany');
 
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const now = new Date();
         const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
-        const response = await AccountsAPI.getAllAccountsSummary(currentMonth);
+        const response = await SummaryAPI.getAllAccountsSummary(currentMonth);
         console.log('Odpowiedź z API:', response);
 
         // Poprawiony warunek - sprawdzamy bezpośrednio response

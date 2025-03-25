@@ -1,15 +1,19 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.CategoryExpenseSummaryDTO;
-import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.dto.TransactionFilterDTO;
+import com.finances.budgetmanagement.entity.Category;
+import com.finances.budgetmanagement.entity.Transaction;
+import com.finances.budgetmanagement.exception.CategoryNotFoundException;
+import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.YearMonth;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -18,10 +22,12 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final CategoryRepository categoryRepository;
 
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionService transactionService, CategoryRepository categoryRepository) {
         this.transactionService = transactionService;
+        this.categoryRepository = categoryRepository;
     }
 
 
@@ -49,22 +55,46 @@ public class TransactionController {
         return ResponseEntity.ok("Transaction deleted");
     }
 
-    @GetMapping("/account-category-expenses")
-    public ResponseEntity<MonthlyCategoryExpensesDTO> getAccountMonthlyCategoryExpenses(
-            @RequestParam Long accountId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
+    @GetMapping("/filter")
+    public List<TransactionDTO> filterTransactions(
+            @RequestParam(required = false) Long accountId,
+            @RequestParam(name = "category", required = false) String categoryName,  // Poprawione mapowanie nazwy parametru
+            @RequestParam(required = false) String transactionType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount
+    ) {
+        TransactionFilterDTO filterDTO = new TransactionFilterDTO();
+        filterDTO.setAccountId(accountId);
 
-        MonthlyCategoryExpensesDTO response = transactionService.getAccountMonthlyCategoryExpenses(accountId, month);
-        return ResponseEntity.ok(response);
+        if (categoryName != null) {
+            Category foundCategory = categoryRepository.findByName(categoryName);
+            if (foundCategory == null) {
+                throw new CategoryNotFoundException("Category not found: " + categoryName);
+            }
+            filterDTO.setCategory(foundCategory.getName());
+        }
+
+
+        if (transactionType != null && !transactionType.isEmpty()) {
+            try {
+                filterDTO.setTransactionType(Enum.valueOf(
+                        com.finances.budgetmanagement.enums.TransactionType.class,
+                        transactionType.toUpperCase()
+                ));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid transaction type: " + transactionType);
+            }
+        }
+
+        filterDTO.setStartDate(startDate);
+        filterDTO.setEndDate(endDate);
+        filterDTO.setMinAmount(minAmount);
+        filterDTO.setMaxAmount(maxAmount);
+
+        return transactionService.filterTransactions(filterDTO);
     }
-
-    @GetMapping("/category-expenses-summary")
-    public ResponseEntity<List<CategoryExpenseSummaryDTO>> getCategoryExpensesSummary(@RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
-        List<CategoryExpenseSummaryDTO> response = transactionService.getCategoryExpensesForAllAccounts(month);
-        return ResponseEntity.ok(response);
-    }
-
-
 
 
 }

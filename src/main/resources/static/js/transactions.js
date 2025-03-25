@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadAccounts();  // Czekamy, aż konta zostaną załadowane
   await loadTransactions();
 
+  populateSelect('categoryFilter', await CategoriesAPI.getAllCategories(), 'name', 'name', 'Categories');
+  populateSelect('accountFilter', accountsList, 'id', 'name', 'Accounts');
+
   if (document.getElementById('transactionForm')) {
     setupFormSubmit();
     loadCategories();
@@ -33,15 +36,16 @@ async function loadAccounts() {
 
 // Funkcja uzupełniająca select (dla kategorii i kont)
 // Dla kont przekazujemy dodatkowo klucze (valueKey oraz textKey)
-function populateSelect(selectId, items, valueKey = 'name', textKey = 'name') {
+function populateSelect(selectId, items, valueKey = 'name', textKey = 'name', placeholder = '-- Select --') {
   const select = document.getElementById(selectId);
   if (!select) return;
+
   select.innerHTML = '';
-  // Dodaj pustą opcję, jeśli chcesz umożliwić wybór domyślnego konta
   const defaultOption = document.createElement('option');
   defaultOption.value = '';
-  defaultOption.textContent = '-- Select --';
+  defaultOption.textContent = placeholder; // Używamy przekazanego placeholder
   select.appendChild(defaultOption);
+
   items.forEach(item => {
     const option = document.createElement('option');
     option.value = item[valueKey];
@@ -54,8 +58,9 @@ function populateSelect(selectId, items, valueKey = 'name', textKey = 'name') {
 async function loadCategories() {
   try {
     const categories = await CategoriesAPI.getAllCategories();
-    populateSelect('category', categories);
-    populateSelect('editCategory', categories);
+    populateSelect('category', categories, 'name', 'name', 'Categories');
+    populateSelect('editCategory', categories, 'name', 'name', 'Categories');
+    populateSelect('categoryFilter', categories, 'name', 'name', 'Categories');
   } catch (error) {
     console.error('Error loading categories:', error);
   }
@@ -109,30 +114,15 @@ async function loadTransactions() {
 }
 
 
-
-
-// Renderowanie transakcji jako elementów list-group
-function renderTransactions() {
+function renderTransactionList(transactions) {
   const transactionList = document.getElementById('transactionList');
   transactionList.innerHTML = '';
 
-  // Filtrowanie transakcji po dacie, jeśli użytkownik wybrał filtr
-  let filteredTransactions = transactions;
-  const dateFilterInput = document.getElementById('dateFilter');
-  if (dateFilterInput && dateFilterInput.value) {
-    const selectedDate = new Date(dateFilterInput.value);
-    // Filtrujemy transakcje, które mają tę samą datę (możesz zmodyfikować logikę, np. na zakres)
-    filteredTransactions = transactions.filter(tx => {
-      const txDate = new Date(tx.date);
-      return txDate.toDateString() === selectedDate.toDateString();
-    });
-  }
-
   const startIndex = (currentPage - 1) * pageSize;
-  const paginatedItems = filteredTransactions.slice(startIndex, startIndex + pageSize);
+  const paginatedItems = transactions.slice(startIndex, startIndex + pageSize);
 
   paginatedItems.forEach(tx => {
-    const account = accountsList.find(acc => acc.id == tx.accountId);
+    const account = accountsList.find(acc => acc.id === Number(tx.accountId));
     const accountName = account ? account.name : 'Default account';
 
     const li = document.createElement('li');
@@ -157,7 +147,57 @@ function renderTransactions() {
   });
 }
 
+// Renderowanie transakcji – pobieranie z backendu z uwzględnieniem filtrów
+function renderTransactions() {
+  // Pobieramy wartości z pól filtrujących
+  const dateFilterInput = document.getElementById('dateFilter');
+  const categoryFilterInput = document.getElementById('categoryFilter');
+  const accountFilterInput = document.getElementById('accountFilter');
+  const transactionTypeFilterInput = document.getElementById('transactionTypeFilter');
+  const minAmountFilterInput = document.getElementById('minAmountFilter');
+  const maxAmountFilterInput = document.getElementById('maxAmountFilter');
 
+  const filterParams = {};
+
+  if (dateFilterInput && dateFilterInput.value) {
+    // Jeśli chcemy filtrować tylko konkretną datę, ustawiamy zarówno startDate jak i endDate
+    filterParams.startDate = dateFilterInput.value;
+    filterParams.endDate = dateFilterInput.value;
+  }
+  if (categoryFilterInput && categoryFilterInput.value) {
+    filterParams.category = categoryFilterInput.value;
+  }
+  if (accountFilterInput.value) {
+    filterParams.accountId = accountFilterInput.value;
+  }
+  if (transactionTypeFilterInput && transactionTypeFilterInput.value) {
+    filterParams.transactionType = transactionTypeFilterInput.value;
+  }
+  if (minAmountFilterInput && minAmountFilterInput.value) {
+    filterParams.minAmount = minAmountFilterInput.value;
+  }
+  if (maxAmountFilterInput && maxAmountFilterInput.value) {
+    filterParams.maxAmount = maxAmountFilterInput.value;
+  }
+
+  // Jeśli przynajmniej jeden filtr został ustawiony – używamy endpointu filtrowania
+  if (Object.keys(filterParams).length > 0) {
+    TransactionsAPI.getFilteredTransactions(filterParams)
+      .then(filteredTransactions => {
+      renderTransactionList(filteredTransactions);
+    })
+      .catch(err => console.error('Błąd przy pobieraniu przefiltrowanych transakcji:', err));
+  } else {
+    // W przeciwnym razie pobieramy wszystkie transakcje
+    TransactionsAPI.getAllTransactions()
+      .then(allTransactions => {
+      renderTransactionList(allTransactions);
+    })
+      .catch(err => console.error('Błąd przy pobieraniu transakcji:', err));
+  }
+}
+
+window.renderTransactions = renderTransactions;
 
 // Renderowanie ostatnich 5 transakcji w karcie po prawej
 function renderRecentTransactions(transactionsList) {

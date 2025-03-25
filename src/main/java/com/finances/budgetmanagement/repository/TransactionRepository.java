@@ -1,10 +1,12 @@
 package com.finances.budgetmanagement.repository;
 
 
+import com.finances.budgetmanagement.dto.TransactionFilterDTO;
 import com.finances.budgetmanagement.dto.TransactionSummary;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.enums.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,7 +16,7 @@ import java.util.List;
 
 
 @Repository
-public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+public interface TransactionRepository extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
 
     List<Transaction> findByAccountUserUsername(String username);
 
@@ -38,4 +40,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
 }

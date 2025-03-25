@@ -55,10 +55,4 @@ public class AccountController {
         return ResponseEntity.ok("Account deleted");
     }
 
-    @GetMapping("/summary")
-    public ResponseEntity<List<AccountSummaryDTO>> getAllAccountsSummary(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
-    ) {
-        return ResponseEntity.ok(accountService.getAllAccountsSummary(month));
-    }
 }

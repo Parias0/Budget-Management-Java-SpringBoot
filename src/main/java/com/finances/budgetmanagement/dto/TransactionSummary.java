@@ -8,5 +8,5 @@ public record TransactionSummary(
         TransactionType transactionType,
         BigDecimal total
 ) {
-    // Konstruktor jest automatycznie generowany dla rekordu
+
 }

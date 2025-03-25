@@ -1,24 +1,18 @@
 package com.finances.budgetmanagement.service.impl;
 
 import com.finances.budgetmanagement.dto.AccountDTO;
-import com.finances.budgetmanagement.dto.AccountSummaryDTO;
 import com.finances.budgetmanagement.dto.TransactionDTO;
-import com.finances.budgetmanagement.dto.TransactionSummary;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.User;
 import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.repository.AccountRepository;
-import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.mapper.AccountMapper;
 import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,13 +21,11 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
-    private final TransactionRepository transactionRepository;
 
-    public AccountServiceImpl(AccountRepository accountRepository, UserRepository userRepository, AccountMapper accountMapper, TransactionRepository transactionRepository) {
+    public AccountServiceImpl(AccountRepository accountRepository, UserRepository userRepository, AccountMapper accountMapper) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.accountMapper = accountMapper;
-        this.transactionRepository = transactionRepository;
     }
 
     @Override
@@ -100,30 +92,6 @@ public class AccountServiceImpl implements AccountService {
         account.setBalance(newBalance);
         Account updated = accountRepository.save(account);
         return accountMapper.accountToAccountDTO(updated);
-    }
-
-    public List<AccountSummaryDTO> getAllAccountsSummary(YearMonth month) {
-        LocalDate startDate = month.atDay(1);
-        LocalDate endDate = month.atEndOfMonth();
-
-        return accountRepository.findAll().stream()
-                .map(account -> {
-                    Map<TransactionType, BigDecimal> summary = transactionRepository
-                            .getMonthlySummary(account.getId(), startDate, endDate)
-                            .stream()
-                            .collect(Collectors.toMap(
-                                    TransactionSummary::transactionType,
-                                    TransactionSummary::total
-                            ));
-
-                    return new AccountSummaryDTO(
-                            account.getId(),
-                            account.getName(),
-                            summary.getOrDefault(TransactionType.INCOME, BigDecimal.ZERO),
-                            summary.getOrDefault(TransactionType.EXPENSE, BigDecimal.ZERO)
-                    );
-                })
-                .collect(Collectors.toList());
     }
 
 }
