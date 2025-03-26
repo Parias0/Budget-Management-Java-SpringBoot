@@ -67,7 +67,7 @@
         </div>
         <!-- Formularz filtrujący -->
         <div class="container my-4">
-            <h2 class="text-center mb-3">Transaction List</h2>
+            <h2 class="text-center mb-3 display-5">Transaction List</h2>
             <div class="card p-3 mb-3">
                 <div class="row">
                     <div class="col-md-2">
@@ -92,13 +92,13 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <input type="number" id="minAmountFilter" class="form-control" placeholder="Min kwota" step="0.01">
+                        <input type="number" id="minAmountFilter" class="form-control" placeholder="Min amount" step="0.01">
                     </div>
                     <div class="col-md-2">
-                        <input type="number" id="maxAmountFilter" class="form-control" placeholder="Max kwota" step="0.01">
+                        <input type="number" id="maxAmountFilter" class="form-control" placeholder="Max amount" step="0.01">
                     </div>
                     <div class="col-md-2">
-                        <button id="applyFilter" class="btn btn-primary w-100" onclick="renderTransactions()">Filtruj</button>
+                        <button id="applyFilter" class="btn btn-primary w-100 mt-3" onclick="renderTransactions()">Filter</button>
                     </div>
                 </div>
             </div>

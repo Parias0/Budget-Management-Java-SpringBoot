@@ -1,5 +1,7 @@
 import { AccountsAPI, CategoriesAPI, SummaryAPI } from './api.js';
 
+let pieChartInstance = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
     loadCategoriesList();
@@ -19,7 +21,7 @@ async function loadAccounts() {
         // Ustaw domyślny miesiąc na bieżący
         const now = new Date();
         document.getElementById('monthInput').value =
-            `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     } catch (error) {
         console.error("Error loading accounts:", error);
@@ -27,7 +29,7 @@ async function loadAccounts() {
     }
 }
 
-// Ładowanie listy kategorii (prawa panel)
+// Ładowanie listy kategorii (prawy panel)
 async function loadCategoriesList() {
     try {
         const categories = await CategoriesAPI.getAllCategories();
@@ -66,6 +68,7 @@ function setupFilterForm() {
         try {
             const data = await SummaryAPI.getAccountCategoryData(accountId, month);
             renderData(data);
+            updatePieChart(data);
         } catch (error) {
             console.error("Error loading data:", error);
             showError(error.message || "Failed to load data");
@@ -73,7 +76,7 @@ function setupFilterForm() {
     });
 }
 
-// Renderowanie danych
+// Renderowanie danych (lista kategorii z transakcjami)
 function renderData(data) {
     const container = document.getElementById('dataContainer');
 
@@ -110,6 +113,59 @@ function renderData(data) {
             </div>
         </div>
     `;
+}
+
+// Aktualizacja wykresu kołowego
+function updatePieChart(data) {
+    const ctx = document.getElementById('pieChart').getContext('2d');
+
+    // Wyliczamy wartości poszczególnych kategorii
+    const labels = data.categories.map(cat => cat.categoryName);
+    const amounts = data.categories.map(cat => cat.totalAmount);
+
+    // Kolory dla wykresu (przykładowa paleta)
+    const backgroundColors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+    ];
+
+    // Jeśli mamy więcej kategorii niż kolorów, rozszerz paletę
+    while (backgroundColors.length < labels.length) {
+        backgroundColors.push(`#${Math.floor(Math.random()*16777215).toString(16)}`);
+    }
+
+    // Jeśli wykres został już stworzony, aktualizujemy dane
+    if (pieChartInstance) {
+        pieChartInstance.data.labels = labels;
+        pieChartInstance.data.datasets[0].data = amounts;
+        pieChartInstance.data.datasets[0].backgroundColor = backgroundColors;
+        pieChartInstance.update();
+    } else {
+        pieChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: backgroundColors
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.chart.data.datasets[0].data.reduce((acc, cur) => acc + cur, 0);
+                                const currentValue = context.raw;
+                                const percentage = ((currentValue / total) * 100).toFixed(2);
+                                return `${context.label}: ${percentage}% (${currentValue.toFixed(2)} PLN)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 // Pomocnicze funkcje UI

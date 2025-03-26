@@ -15,4 +15,28 @@ public class MonthlyCategoryExpensesDTO {
         this.totalExpenses = totalExpenses;
         this.categories = categories;
     }
+
+    public YearMonth getMonth() {
+        return month;
+    }
+
+    public void setMonth(YearMonth month) {
+        this.month = month;
+    }
+
+    public BigDecimal getTotalExpenses() {
+        return totalExpenses;
+    }
+
+    public void setTotalExpenses(BigDecimal totalExpenses) {
+        this.totalExpenses = totalExpenses;
+    }
+
+    public List<CategoryExpensesDTO> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<CategoryExpensesDTO> categories) {
+        this.categories = categories;
+    }
 }

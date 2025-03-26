@@ -126,7 +126,11 @@ function renderTransactionList(transactions) {
     const accountName = account ? account.name : 'Default account';
 
     const li = document.createElement('li');
-    li.className = 'list-group-item';
+    li.className = `list-group-item
+      ${tx.transactionType === 'INCOME'
+        ? 'list-group-item-success'
+        : 'list-group-item-danger'}`;
+
     li.innerHTML = `
       <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -138,7 +142,7 @@ function renderTransactionList(transactions) {
           <span class="badge bg-secondary mb-2">${accountName}</span>
           <div>
             <button class="btn btn-sm btn-primary" onclick="openEditModal(${tx.id})">Edit</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${tx.id})">Delete</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTransaction(${tx.id})">Delete</button>
           </div>
         </div>
       </div>

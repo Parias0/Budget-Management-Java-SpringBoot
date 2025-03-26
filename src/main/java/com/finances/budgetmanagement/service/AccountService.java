@@ -22,4 +22,5 @@ public interface AccountService {
     //business operations
     AccountDTO adjustBalance(Long accountId, TransactionDTO transactionDTO, boolean isAdding);
 
+
 }

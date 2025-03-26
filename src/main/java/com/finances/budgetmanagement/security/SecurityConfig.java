@@ -23,13 +23,26 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configure(http)) // Obsługa CORS
+                .cors(cors -> cors.configure(http))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/login", "/js/login.js", "/js/validation.js", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login",
+                                "/login",
+                                "/js/login.js",
+                                "/js/validation.js",
+                                "/api/auth/register",
+                                "/error/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        // To przechwyci brak uwierzytelnienia i przekieruje do strony błędu
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendRedirect("/error/403");
+                        })
+                        // Dla przypadków, gdy użytkownik jest uwierzytelniony, ale nie ma uprawnień
+                        .accessDeniedPage("/error/403")
+                );
 
         return http.build();
     }

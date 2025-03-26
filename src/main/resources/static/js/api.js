@@ -1,70 +1,33 @@
 const apiBaseURL = '/api';
 
-//GET request
-const apiGet = async (url) => {
+const apiRequest = async (method, url, data = null) => {
   try {
-    const response = await fetch(apiBaseURL + url);
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
+    const options = {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (data) options.body = JSON.stringify(data);
+
+    const response = await fetch(apiBaseURL + url, options);
+
+    if (response.status === 403) {
+      window.location.href = '/error/403';
+      return;
     }
+
+    if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
     return await response.json();
   } catch (error) {
     console.error(error);
   }
 };
 
-//POST request
-const apiPost = async (url, data) => {
-  try {
-    const response = await fetch(apiBaseURL + url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-//PUT request
-const apiPut = async (url, data) => {
-  try {
-    const response = await fetch(apiBaseURL + url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-//DELETE request
-const apiDelete = async (url) => {
-  try {
-    const response = await fetch(apiBaseURL + url, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-  }
-};
+// Skrócone funkcje dla poszczególnych metod:
+const apiGet = (url) => apiRequest('GET', url);
+const apiPost = (url, data) => apiRequest('POST', url, data);
+const apiPut = (url, data) => apiRequest('PUT', url, data);
+const apiDelete = (url) => apiRequest('DELETE', url);
 
 // API for accounts
 const AccountsAPI = {
@@ -100,7 +63,7 @@ const AuthAPI = {
   logout: () => apiPost('/auth/logout'),
 };
 
-// API for transactions
+// Summary API
 const SummaryAPI = {
   getAllAccountsSummary: (month) => apiGet(`/summary/account-summary?month=${month}`),
   getAccountCategoryData: (accountId, month) =>
@@ -108,7 +71,12 @@ const SummaryAPI = {
   getCategoryExpensesSummary: (month) => apiGet(`/summary/category-expenses-summary?month=${month}`),
 };
 
+const ReportAPI = {
+  getMonthlyReport: (accountId, month) =>
+  apiGet(`/reports/monthly?accountId=${accountId}&month=${month}`),
+};
 
 
 
-export { AccountsAPI, CategoriesAPI, TransactionsAPI, AuthAPI, SummaryAPI };
+
+export { AccountsAPI, CategoriesAPI, TransactionsAPI, AuthAPI, SummaryAPI, ReportAPI };

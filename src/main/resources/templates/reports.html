@@ -1,66 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
-
 <body>
 <section layout:fragment="content" class="container my-4">
-  <h1 class="text-center mb-4">Reports</h1>
+  <h1 class="text-center mb-4 display-2">Monthly Reports</h1>
 
-  <!-- Podsumowanie miesięczne -->
-  <h2 class="section-title">Monthly Summary</h2>
-  <div class="form-row mb-3">
-    <div class="form-group col-md-4">
-      <label for="yearSelect">Choose year:</label>
-      <select id="yearSelect" class="form-control" onchange="loadMonthlySummary()">
-        <option value="">Select year</option>
-        <!-- Opcje roku będą ładowane dynamicznie -->
-      </select>
-    </div>
-    <div class="form-group col-md-4">
-      <label for="monthSelect">Select Month:</label>
-      <select id="monthSelect" class="form-control" onchange="loadMonthlySummary()">
-        <option value="">Select month</option>
-        <option value="All">All</option>
-        <option value="January">January</option>
-        <option value="February">February</option>
-        <option value="March">March</option>
-        <option value="April">April</option>
-        <option value="May">May</option>
-        <option value="June">June</option>
-        <option value="July">July</option>
-        <option value="August">August</option>
-        <option value="September">September</option>
-        <option value="October">October</option>
-        <option value="November">November</option>
-        <option value="December">December</option>
-      </select>
-    </div>
-    <div class="form-group col-md-4">
-      <label for="categorySelect">Select Categories:</label>
-      <select id="categorySelect" class="form-control" multiple onchange="loadMonthlySummary()">
-        <!-- Opcje kategorii będą dodawane dynamicznie -->
-      </select>
+  <!-- Formularz filtrowania -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Select Account</label>
+          <select id="accountSelect" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Select Month</label>
+          <input type="month" id="monthSelect" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100" onclick="loadReport()">
+            Generate Report
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Kontener na podsumowanie miesięczne -->
-  <div id="monthlySummary" class="mb-4"></div>
-
-  <!-- Wykresy -->
-  <h2 id="expensesChartTitle" class="section-title" style="display:none;">Expenses per Category</h2>
-  <div id="expensesChartContainer" style="display:none;">
-    <canvas id="expensesChart" width="400" height="200"></canvas>
+  <!-- Sekcja z wykresami -->
+  <div id="loading" class="text-center d-none">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
   </div>
 
-  <h2 id="incomeChartTitle" class="section-title" style="display:none;">Income per Category</h2>
-  <div id="incomeChartContainer" style="display:none;">
-    <canvas id="incomeChart" width="400" height="200"></canvas>
+  <div id="reportContent" class="d-none">
+    <!-- Podsumowanie -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="card text-white bg-success mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Total Income</h5>
+            <h2 id="totalIncome" class="card-text">0.00 PLN</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card text-white bg-danger mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Total Expenses</h5>
+            <h2 id="totalExpense" class="card-text">0.00 PLN</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wykresy -->
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Income/Expense Ratio</h5>
+            <canvas id="ratioChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Category Breakdown</h5>
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela transakcji -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Transaction List</h5>
+        <div id="transactionList" class="list-group"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Skrypty aplikacji -->
-  <script src="/js/transactions.js"></script>
-  <script src="/js/reports.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/js/reports.js" type="module"></script>
 </section>
 </body>
 </html>

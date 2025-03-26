@@ -12,7 +12,7 @@
             <div class="col-md-12">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h3 class="card-title lead">Filters</h3>
+                        <h3 class="card-title lead">Filter for total expenses in a selected month</h3>
                     </div>
                     <div class="card-body">
                         <form id="filterForm">
@@ -41,14 +41,26 @@
                 <div id="dataContainer"></div>
             </div>
 
-            <!-- Panel z listą kategorii -->
+            <!-- Panel z listą kategorii oraz wykresem -->
             <div class="col-md-4">
+                <!-- Karta z listą kategorii -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title lead">Categories Legend</h3>
+                        <h3 class="card-title lead">Available Categories</h3>
                     </div>
                     <div class="card-body">
                         <ul id="categoriesList" class="list-group"></ul>
+                    </div>
+                </div>
+
+                <!-- Karta z wykresem kołowym -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title lead">Categories Pie Chart</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pieChart" width="400" height="400"></canvas>
+
                     </div>
                 </div>
             </div>
