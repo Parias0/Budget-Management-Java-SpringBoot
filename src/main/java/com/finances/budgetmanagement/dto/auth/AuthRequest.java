@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 

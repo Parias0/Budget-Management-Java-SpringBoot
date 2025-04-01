@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
 import com.finances.budgetmanagement.exception.GlobalExceptionHandler;
 import com.finances.budgetmanagement.exception.TransactionNotFoundException;
 import com.finances.budgetmanagement.service.TransactionService;

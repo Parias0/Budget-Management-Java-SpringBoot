@@ -1,7 +1,7 @@
 package com.finances.budgetmanagement.service.impl;
 
-import com.finances.budgetmanagement.dto.AuthRequest;
-import com.finances.budgetmanagement.dto.AuthResponse;
+import com.finances.budgetmanagement.dto.auth.AuthRequest;
+import com.finances.budgetmanagement.dto.auth.AuthResponse;
 import com.finances.budgetmanagement.entity.Role;
 import com.finances.budgetmanagement.entity.User;
 import com.finances.budgetmanagement.enums.RoleName;
@@ -9,20 +9,32 @@ import com.finances.budgetmanagement.repository.RoleRepository;
 import com.finances.budgetmanagement.repository.UserRepository;
 import com.finances.budgetmanagement.security.JwtTokenUtil;
 import com.finances.budgetmanagement.service.UserService;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Value("${app.init.create-admin:false}")
+    private boolean createAdmin;
+
+    @Value("${app.init.admin.username}")
+    private String adminUsername;
+
+    @Value("${app.init.admin.password}")
+    private String adminPassword;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -38,6 +50,39 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+
+    @PostConstruct
+    @Transactional
+    public void initAdminAccount() {
+        if (createAdmin && shouldCreateAdmin()) {
+            createAdminUser();
+        }
+    }
+
+    private boolean shouldCreateAdmin() {
+        return userRepository.countByRoles_Name(RoleName.ROLE_ADMIN) == 0;
+    }
+
+    private void createAdminUser() {
+        User admin = new User();
+        admin.setUsername(adminUsername);
+        admin.setPassword(passwordEncoder.encode(adminPassword));
+
+        Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setName(RoleName.ROLE_ADMIN);
+                    return roleRepository.save(role);
+                });
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(adminRole);
+        admin.setRoles(roles);
+
+        userRepository.save(admin);
+        System.out.println("Created initial admin account: " + adminUsername);
+    }
 
     @Override
     public AuthResponse authenticateUser(AuthRequest authRequest, HttpServletResponse response) {
@@ -114,4 +159,6 @@ public class UserServiceImpl implements UserService {
 
         return "User logged out successfully";
     }
+
+
 }

@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.category;
 
 public class CategoryDTO {
     private Long id;

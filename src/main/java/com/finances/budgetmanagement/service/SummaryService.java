@@ -1,8 +1,8 @@
 package com.finances.budgetmanagement.service;
 
-import com.finances.budgetmanagement.dto.AccountSummaryDTO;
-import com.finances.budgetmanagement.dto.CategoryExpenseSummaryDTO;
-import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesDTO;
+import com.finances.budgetmanagement.dto.summary.AccountSummaryDTO;
+import com.finances.budgetmanagement.dto.summary.CategoryExpenseSummaryDTO;
+import com.finances.budgetmanagement.dto.summary.MonthlyCategoryExpensesDTO;
 
 import java.time.YearMonth;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.AuthRequest;
+import com.finances.budgetmanagement.dto.auth.AuthRequest;
 import com.finances.budgetmanagement.entity.Role;
 import com.finances.budgetmanagement.entity.User;
 import com.finances.budgetmanagement.enums.RoleName;

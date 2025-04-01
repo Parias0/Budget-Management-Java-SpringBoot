@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.auth;
 
 public class AuthResponse {
     private String message;

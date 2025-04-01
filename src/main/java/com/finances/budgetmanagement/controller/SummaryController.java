@@ -1,8 +1,8 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.AccountSummaryDTO;
-import com.finances.budgetmanagement.dto.CategoryExpenseSummaryDTO;
-import com.finances.budgetmanagement.dto.MonthlyCategoryExpensesDTO;
+import com.finances.budgetmanagement.dto.summary.AccountSummaryDTO;
+import com.finances.budgetmanagement.dto.summary.CategoryExpenseSummaryDTO;
+import com.finances.budgetmanagement.dto.summary.MonthlyCategoryExpensesDTO;
 import com.finances.budgetmanagement.service.SummaryService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

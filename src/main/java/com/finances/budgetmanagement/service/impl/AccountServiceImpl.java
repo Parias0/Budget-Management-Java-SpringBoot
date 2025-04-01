@@ -1,7 +1,7 @@
 package com.finances.budgetmanagement.service.impl;
 
-import com.finances.budgetmanagement.dto.AccountDTO;
-import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.dto.account.AccountDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
 import com.finances.budgetmanagement.entity.Account;
 import com.finances.budgetmanagement.entity.User;
 import com.finances.budgetmanagement.enums.TransactionType;

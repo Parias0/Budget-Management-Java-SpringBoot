@@ -1,19 +1,23 @@
 package com.finances.budgetmanagement.service.impl;
 
-import com.finances.budgetmanagement.dto.*;
+import com.finances.budgetmanagement.dto.summary.AccountSummaryDTO;
+import com.finances.budgetmanagement.dto.summary.CategoryExpenseSummaryDTO;
+import com.finances.budgetmanagement.dto.summary.CategoryExpensesDTO;
+import com.finances.budgetmanagement.dto.summary.MonthlyCategoryExpensesDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionFilterDTO;
 import com.finances.budgetmanagement.entity.Account;
-import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.mapper.TransactionMapper;
 import com.finances.budgetmanagement.repository.AccountRepository;
 import com.finances.budgetmanagement.repository.TransactionRepository;
 import com.finances.budgetmanagement.service.SummaryService;
+import com.finances.budgetmanagement.specification.TransactionSpecification;
 import com.finances.budgetmanagement.utils.SecurityUtil;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
@@ -32,84 +36,88 @@ public class SummaryServiceImpl implements SummaryService {
         this.transactionMapper = transactionMapper;
     }
 
-
     @Override
     public MonthlyCategoryExpensesDTO getAccountMonthlyCategoryExpenses(Long accountId, YearMonth month) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+
         String username = SecurityUtil.getCurrentUsername();
 
-        if (!account.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("Account does not belong to the current user");
-        }
+        Account account = accountRepository.findByIdAndUserUsername(accountId, username)
+                .orElseThrow(() -> new RuntimeException("Account not found or access denied"));
 
-        LocalDate startDate = month.atDay(1);
-        LocalDate endDate = month.atEndOfMonth();
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccountId(accountId);
+        filter.setTransactionType(TransactionType.EXPENSE);
+        filter.setStartDate(month.atDay(1));
+        filter.setEndDate(month.atEndOfMonth());
 
-        List<Transaction> expenses = transactionRepository.findByAccountIdAndTransactionTypeAndDateBetween(
-                accountId,
-                TransactionType.EXPENSE,
-                startDate,
-                endDate
+        List<Transaction> expenses = transactionRepository.findAll(
+                TransactionSpecification.getSpecification(filter)
         );
 
-        // Grupowanie transakcji po kategoriach
-        Map<Category, List<Transaction>> transactionsByCategory = expenses.stream()
-                .collect(Collectors.groupingBy(Transaction::getCategory));
+        Map<String, List<Transaction>> transactionsByCategory = expenses.stream()
+                .collect(Collectors.groupingBy(t -> t.getCategory().getName()));
 
-        // Tworzenie DTO dla kategorii
         List<CategoryExpensesDTO> categoryExpenses = transactionsByCategory.entrySet().stream()
                 .map(entry -> {
-                    Category category = entry.getKey();
-                    List<Transaction> categoryTransactions = entry.getValue();
-                    BigDecimal categoryTotal = categoryTransactions.stream()
+                    BigDecimal total = entry.getValue().stream()
                             .map(Transaction::getAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    List<TransactionDTO> transactionsDTO = categoryTransactions.stream()
+                    List<TransactionDTO> transactions = entry.getValue().stream()
                             .map(transactionMapper::transactionToTransactionDTO)
-                            .collect(Collectors.toList());
-                    return new CategoryExpensesDTO(category.getName(), categoryTotal, transactionsDTO);
+                            .toList();
+                    return new CategoryExpensesDTO(entry.getKey(), total, transactions);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
-        BigDecimal total = categoryExpenses.stream()
+        BigDecimal totalExpenses = categoryExpenses.stream()
                 .map(CategoryExpensesDTO::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new MonthlyCategoryExpensesDTO(month, total, categoryExpenses);
+        return new MonthlyCategoryExpensesDTO(month, totalExpenses, categoryExpenses);
     }
 
+    @Override
     public List<CategoryExpenseSummaryDTO> getCategoryExpensesForAllAccounts(YearMonth month) {
-        // Pobieramy transakcje wydatków z bazy dla wszystkich kont w danym miesiącu
-        List<Transaction> expenses = transactionRepository.findByTransactionTypeAndDateBetween(
-                TransactionType.EXPENSE, month.atDay(1), month.atEndOfMonth()
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setTransactionType(TransactionType.EXPENSE);
+        filter.setStartDate(month.atDay(1));
+        filter.setEndDate(month.atEndOfMonth());
+
+        List<Transaction> expenses = transactionRepository.findAll(
+                TransactionSpecification.getSpecification(filter)
         );
 
-        // Grupowanie po kategoriach, sumowanie wydatków
         Map<String, BigDecimal> categoryTotals = expenses.stream()
                 .collect(Collectors.groupingBy(
                         t -> t.getCategory().getName(),
                         Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
                 ));
 
-        // Przekształcamy dane na DTO
         return categoryTotals.entrySet().stream()
                 .map(entry -> new CategoryExpenseSummaryDTO(entry.getKey(), null, entry.getValue()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
+    @Override
     public List<AccountSummaryDTO> getAllAccountsSummary(YearMonth month) {
-        LocalDate startDate = month.atDay(1);
-        LocalDate endDate = month.atEndOfMonth();
+        String username = SecurityUtil.getCurrentUsername();
 
-        return accountRepository.findAll().stream()
+        // Pobieramy tylko konta bieżącego użytkownika!
+        List<Account> userAccounts = accountRepository.findAllByUserUsername(username);
+
+        return userAccounts.stream() // Zmiana z accountRepository.findAll()
                 .map(account -> {
-                    Map<TransactionType, BigDecimal> summary = transactionRepository
-                            .getMonthlySummary(account.getId(), startDate, endDate)
-                            .stream()
-                            .collect(Collectors.toMap(
-                                    TransactionSummary::transactionType,
-                                    TransactionSummary::total
+                    TransactionFilterDTO filter = new TransactionFilterDTO();
+                    filter.setAccountId(account.getId());
+                    filter.setStartDate(month.atDay(1));
+                    filter.setEndDate(month.atEndOfMonth());
+
+                    Map<TransactionType, BigDecimal> summary = transactionRepository.findAll(
+                                    TransactionSpecification.getSpecification(filter)
+                            ).stream()
+                            .collect(Collectors.groupingBy(
+                                    Transaction::getTransactionType,
+                                    Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
                             ));
 
                     return new AccountSummaryDTO(
@@ -119,6 +127,6 @@ public class SummaryServiceImpl implements SummaryService {
                             summary.getOrDefault(TransactionType.EXPENSE, BigDecimal.ZERO)
                     );
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 }

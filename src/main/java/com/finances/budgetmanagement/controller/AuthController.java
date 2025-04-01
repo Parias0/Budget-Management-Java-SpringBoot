@@ -1,7 +1,7 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.AuthRequest;
-import com.finances.budgetmanagement.dto.AuthResponse;
+import com.finances.budgetmanagement.dto.auth.AuthRequest;
+import com.finances.budgetmanagement.dto.auth.AuthResponse;
 import com.finances.budgetmanagement.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;

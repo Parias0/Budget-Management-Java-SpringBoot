@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.specification;
 
-import com.finances.budgetmanagement.dto.TransactionFilterDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionFilterDTO;
 import com.finances.budgetmanagement.entity.Transaction;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;

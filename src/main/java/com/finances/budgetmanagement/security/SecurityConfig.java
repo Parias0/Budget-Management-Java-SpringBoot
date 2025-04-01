@@ -26,11 +26,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configure(http))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login",
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/auth/**",
                                 "/login",
-                                "/js/login.js",
-                                "/js/validation.js",
-                                "/api/auth/register",
+                                "/js/auth/**",
+                                "/js/api.js",
                                 "/error/**").permitAll()
                         .anyRequest().authenticated()
                 )

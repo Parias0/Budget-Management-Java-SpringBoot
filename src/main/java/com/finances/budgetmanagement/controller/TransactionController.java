@@ -1,9 +1,8 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.TransactionDTO;
-import com.finances.budgetmanagement.dto.TransactionFilterDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionFilterDTO;
 import com.finances.budgetmanagement.entity.Category;
-import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.exception.CategoryNotFoundException;
 import com.finances.budgetmanagement.repository.CategoryRepository;
 import com.finances.budgetmanagement.service.TransactionService;

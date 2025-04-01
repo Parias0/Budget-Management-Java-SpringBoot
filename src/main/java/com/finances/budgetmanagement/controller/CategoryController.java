@@ -1,7 +1,7 @@
 package com.finances.budgetmanagement.controller;
 
 
-import com.finances.budgetmanagement.dto.CategoryDTO;
+import com.finances.budgetmanagement.dto.category.CategoryDTO;
 import com.finances.budgetmanagement.service.CategoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

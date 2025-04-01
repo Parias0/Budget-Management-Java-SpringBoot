@@ -1,9 +1,8 @@
 package com.finances.budgetmanagement.controller;
 
-import com.finances.budgetmanagement.dto.MonthlyReportDTO;
+import com.finances.budgetmanagement.dto.report.MonthlyReportDTO;
 import com.finances.budgetmanagement.service.AccountService;
 import com.finances.budgetmanagement.service.ReportService;
-import com.finances.budgetmanagement.service.TransactionService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

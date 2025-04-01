@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.service;
 
-import com.finances.budgetmanagement.dto.CategoryDTO;
+import com.finances.budgetmanagement.dto.category.CategoryDTO;
 
 import java.util.List;
 

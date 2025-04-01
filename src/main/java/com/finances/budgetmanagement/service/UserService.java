@@ -1,7 +1,7 @@
 package com.finances.budgetmanagement.service;
 
-import com.finances.budgetmanagement.dto.AuthRequest;
-import com.finances.budgetmanagement.dto.AuthResponse;
+import com.finances.budgetmanagement.dto.auth.AuthRequest;
+import com.finances.budgetmanagement.dto.auth.AuthResponse;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface UserService {
@@ -11,4 +11,5 @@ public interface UserService {
     String registerUser(AuthRequest authRequest);
 
     String logoutUser(HttpServletResponse response);
+
 }

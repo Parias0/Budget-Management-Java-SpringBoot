@@ -1,4 +1,6 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.summary;
+
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
 
 import java.math.BigDecimal;
 import java.util.List;

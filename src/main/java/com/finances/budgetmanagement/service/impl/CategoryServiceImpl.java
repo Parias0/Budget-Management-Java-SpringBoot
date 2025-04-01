@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.service.impl;
 
-import com.finances.budgetmanagement.dto.CategoryDTO;
+import com.finances.budgetmanagement.dto.category.CategoryDTO;
 import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.exception.CategoryNotFoundException;
 import com.finances.budgetmanagement.mapper.CategoryMapper;

@@ -1,9 +1,9 @@
 package com.finances.budgetmanagement.service.impl;
 
 
-import com.finances.budgetmanagement.dto.MonthlyReportDTO;
-import com.finances.budgetmanagement.dto.TransactionDTO;
-import com.finances.budgetmanagement.dto.TransactionFilterDTO;
+import com.finances.budgetmanagement.dto.report.MonthlyReportDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionFilterDTO;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.enums.TransactionType;
 import com.finances.budgetmanagement.mapper.TransactionMapper;

@@ -1,10 +1,8 @@
 package com.finances.budgetmanagement.service;
 
-import com.finances.budgetmanagement.dto.AccountDTO;
-import com.finances.budgetmanagement.dto.AccountSummaryDTO;
-import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.dto.account.AccountDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
 
-import java.time.YearMonth;
 import java.util.List;
 
 public interface AccountService {

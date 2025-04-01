@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.transaction;
 
 import com.finances.budgetmanagement.enums.TransactionType;
 

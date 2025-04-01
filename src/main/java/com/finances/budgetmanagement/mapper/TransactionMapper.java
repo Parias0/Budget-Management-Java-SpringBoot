@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.mapper;
 
-import com.finances.budgetmanagement.dto.TransactionDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
 import com.finances.budgetmanagement.entity.Category;
 import com.finances.budgetmanagement.entity.Transaction;
 import com.finances.budgetmanagement.repository.CategoryRepository;
@@ -22,7 +22,6 @@ public abstract class TransactionMapper {
     @Mapping(target = "account", ignore = true)
     public abstract Transaction transactionDTOToTransaction(TransactionDTO transactionDTO);
 
-    // Metoda pomocnicza wykorzystująca repozytorium
     protected Category map(String categoryName) {
         if (categoryName == null) {
             return null;

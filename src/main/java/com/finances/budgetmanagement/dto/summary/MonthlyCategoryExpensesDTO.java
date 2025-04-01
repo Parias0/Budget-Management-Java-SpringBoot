@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.summary;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;

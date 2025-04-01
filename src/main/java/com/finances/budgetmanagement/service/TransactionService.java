@@ -1,10 +1,8 @@
 package com.finances.budgetmanagement.service;
 
-import com.finances.budgetmanagement.dto.TransactionDTO;
-import com.finances.budgetmanagement.dto.TransactionFilterDTO;
-import com.finances.budgetmanagement.entity.Transaction;
+import com.finances.budgetmanagement.dto.transaction.TransactionDTO;
+import com.finances.budgetmanagement.dto.transaction.TransactionFilterDTO;
 
-import java.time.YearMonth;
 import java.util.List;
 
 public interface TransactionService {

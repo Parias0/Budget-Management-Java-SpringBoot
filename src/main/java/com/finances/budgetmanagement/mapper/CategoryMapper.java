@@ -1,6 +1,6 @@
 package com.finances.budgetmanagement.mapper;
 
-import com.finances.budgetmanagement.dto.CategoryDTO;
+import com.finances.budgetmanagement.dto.category.CategoryDTO;
 import com.finances.budgetmanagement.entity.Category;
 import org.mapstruct.Mapper;
 

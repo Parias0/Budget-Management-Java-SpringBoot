@@ -1,4 +1,4 @@
-package com.finances.budgetmanagement.dto;
+package com.finances.budgetmanagement.dto.account;
 
 import java.math.BigDecimal;
 public class AccountDTO {
