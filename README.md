@@ -50,7 +50,6 @@ Full-stack budget management system with secure transaction handling and compreh
 - Spring Boot 3.4.2
 - Spring Security with JWT
 - Spring Data JPA
-- Spring Transaction Management
 
 **Frontend:**
 - Thymeleaf templates
